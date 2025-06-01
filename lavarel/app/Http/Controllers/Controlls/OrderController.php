@@ -1,6 +1,7 @@
 <?php
 namespace App\Http\Controllers\Controlls;
 
+use App\Http\Controllers\Controlls\Controller; // Dodany brakujący import
 use App\Models\Order;
 use App\Models\User;
 use App\Models\Menu;
@@ -23,11 +24,14 @@ class OrderController extends Controller
     }
 
     public function store(OrderRequest $request)
-{
-    Order::create($request->validated());
+    {
+        $order = Order::create($request->validated());
+        $userName = User::find($request->user_id)->name ?? 'Użytkownik';
+        $menuName = Menu::find($request->menu_id)->name ?? 'Produkt';
 
-    return redirect()->route('orders.index')->with('success', 'Zamówienie zostało dodane.');
-}
+        return redirect()->route('orders.index')
+            ->with('success', 'Nowe zamówienie #' . $order->id . ' dla ' . $userName . ' zostało dodane.');
+    }
 
     public function edit($id)
     {
@@ -38,18 +42,69 @@ class OrderController extends Controller
     }
 
     public function update(OrderRequest $request, $id)
-{
-    $order = Order::findOrFail($id);
-    $order->update($request->validated());
+    {
+        $order = Order::findOrFail($id);
+        $oldStatus = $order->status;
+        
+        $order->update($request->validated());
+        
+        if ($oldStatus !== $request->status) {
+            return redirect()->route('orders.index')
+                ->with('info', 'Status zamówienia #' . $order->id . ' został zmieniony z "' . 
+                    $oldStatus . '" na "' . $order->status . '"');
+        }
 
-    return redirect()->route('orders.index')->with('success', 'Zamówienie zostało zaktualizowane.');
-}
+        return redirect()->route('orders.index')
+            ->with('success', 'Zamówienie #' . $order->id . ' zostało zaktualizowane.');
+    }
 
     public function destroy($id)
     {
         $order = Order::findOrFail($id);
+        $orderNumber = $order->id;
+        $userName = $order->user->name ?? 'Użytkownika';
+        
         $order->delete();
 
-        return redirect()->route('orders.index')->with('success', 'Zamówienie zostało usunięte.');
+        return redirect()->route('orders.index')
+            ->with('warning', 'Zamówienie #' . $orderNumber . ' dla ' . $userName . ' zostało usunięte.');
+    }
+    
+    /**
+     * Zmiana statusu zamówienia
+     */
+    public function updateStatus(Request $request, $id)
+    {
+        $request->validate([
+            'status' => 'required|string|in:new,processing,completed,cancelled'
+        ]);
+        
+        $order = Order::findOrFail($id);
+        $oldStatus = $order->status;
+        $order->status = $request->status;
+        $order->save();
+        
+        return redirect()->route('orders.index')
+            ->with('info', 'Status zamówienia #' . $order->id . ' został zmieniony z "' . 
+                $oldStatus . '" na "' . $order->status . '"');
+    }
+    
+    /**
+     * Anulowanie zamówienia
+     */
+    public function cancel($id)
+    {
+        $order = Order::findOrFail($id);
+        
+        if ($order->status === 'completed') {
+            return redirect()->route('orders.index')
+                ->with('error', 'Nie można anulować zrealizowanego zamówienia #' . $order->id);
+        }
+        
+        $order->status = 'cancelled';
+        $order->save();
+        
+        return redirect()->route('orders.index')
+            ->with('warning', 'Zamówienie #' . $order->id . ' zostało anulowane.');
     }
 }

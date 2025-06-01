@@ -10,6 +10,9 @@ use App\Http\Controllers\Controlls\TransactionController;
 use App\Http\Controllers\Controlls\OrderController;
 use App\Http\Controllers\Controlls\DashboardController;
 use App\Http\Controllers\Controlls\UserController;
+use App\Http\Controllers\Controlls\UserDashboardController;
+use App\Http\Controllers\Controlls\CartController;
+use Illuminate\Support\Facades\Hash;
 
 // ==================== Strona główna i statyczne strony ====================
 
@@ -72,7 +75,7 @@ Route::post('/register', [UserController::class, 'store'])
 
 // ==================== Zarządzanie użytkownikami ====================
 
-Route::middleware(['auth', 'admin'])->group(function () {
+Route::middleware(['auth'])->group(function () {
     // Lista użytkowników
     Route::get('/users', function () {
         $users = User::all(); 
@@ -87,10 +90,32 @@ Route::middleware(['auth', 'admin'])->group(function () {
 
     // Aktualizacja użytkownika
     Route::put('/users/update/{id}', function (Request $request, $id) {
-        $user = User::findOrFail($id);
-        $user->update($request->only(['name', 'email']));
-        return redirect()->route('users.index')->with('success', 'Dane użytkownika zostały zaktualizowane.');
-    })->name('users.update');
+    $user = User::findOrFail($id);
+    
+    // Walidacja
+    $validated = $request->validate([
+        'name' => 'required|string|max:255',
+        'email' => 'required|email|unique:users,email,' . $id,
+        'role' => 'required|string|in:user,admin',
+        'password' => 'nullable|string|min:8|confirmed',
+    ]);
+    
+    // Podstawowe dane
+    $updateData = [
+        'name' => $validated['name'],
+        'email' => $validated['email'],
+        'role' => $validated['role'],
+    ];
+    
+    // Dodaj hasło tylko jeśli zostało podane
+    if (!empty($validated['password'])) {
+        $updateData['password'] = Hash::make($validated['password']);
+    }
+    
+    $user->update($updateData);
+    
+    return redirect()->route('users.index')->with('success', 'Dane użytkownika zostały zaktualizowane.');
+})->name('users.update');
 
     // Usuwanie użytkownika
     Route::delete('/users/{id}', function ($id) {
@@ -102,7 +127,11 @@ Route::middleware(['auth', 'admin'])->group(function () {
 
 // ==================== Zarządzanie menu ====================
 
-Route::middleware(['auth', 'admin'])->group(function () {
+// Public menu route
+Route::get('/menu', [MenuController::class, 'index'])->name('menu.index');
+
+// Admin menu management routes
+Route::middleware(['auth'])->group(function () {
     Route::get('add-menu', [MenuController::class, 'create'])->name('menu.create');
     Route::post('add-menu', [MenuController::class, 'store'])->name('menu.store');
     Route::get('/menu/edit/{id}', [MenuController::class, 'edit'])->name('menu.edit');
@@ -112,7 +141,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
 
 // ==================== Zarządzanie transakcjami ====================
 
-Route::middleware(['auth', 'admin'])->group(function () {
+Route::middleware(['auth'])->group(function () {
     Route::get('/transactions', [TransactionController::class, 'index'])->name('transactions.index');
     Route::get('/transactions/edit/{id}', [TransactionController::class, 'edit'])->name('transactions.edit');
     Route::put('/transactions/update/{id}', [TransactionController::class, 'update'])->name('transactions.update');
@@ -128,4 +157,18 @@ Route::middleware('auth')->group(function () {
     Route::get('/orders/edit/{id}', [OrderController::class, 'edit'])->name('orders.edit');
     Route::put('/orders/update/{id}', [OrderController::class, 'update'])->name('orders.update');
     Route::delete('/orders/{id}', [OrderController::class, 'destroy'])->name('orders.destroy');
+});
+
+
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/user/userdashboard', [UserDashboardController::class, 'index'])->name('user.dashboard');
+    Route::put('/user/profile', [UserDashboardController::class, 'updateProfile'])->name('user.profile.update');
+});
+
+Route::middleware('auth')->group(function () {
+    Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+    Route::post('/cart/add/{menuItem}', [CartController::class, 'add'])->name('cart.add');
+    Route::delete('/cart/remove/{cartItem}', [CartController::class, 'remove'])->name('cart.remove');
+    Route::post('/cart/checkout', [CartController::class, 'checkout'])->name('cart.checkout');
 });

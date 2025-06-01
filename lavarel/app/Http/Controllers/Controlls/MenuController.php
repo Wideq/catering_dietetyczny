@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Controlls;
 
+use App\Http\Controllers\Controlls\Controller;
 use App\Models\Menu;
 use App\Http\Requests\MenuRequest;
 
@@ -29,9 +30,9 @@ class MenuController extends Controller
             $data['image'] = $request->file('image')->store('menus', 'public');
         }
 
-        Menu::create($data);
+        $menu = Menu::create($data);
 
-        return redirect()->route('dopasowanie')->with('success', 'Danie zostało dodane do menu.');
+        return redirect()->route('dopasowanie')->with('success', 'Danie "' . $menu->name . '" zostało dodane do menu.');
     }
 
     public function edit($id)
@@ -43,6 +44,7 @@ class MenuController extends Controller
     public function update(MenuRequest $request, $id)
     {
         $menu = Menu::findOrFail($id);
+        $oldName = $menu->name;
 
         $data = $request->validated();
 
@@ -52,14 +54,22 @@ class MenuController extends Controller
 
         $menu->update($data);
 
-        return redirect()->route('dopasowanie')->with('success', 'Menu zostało zaktualizowane.');
+        if ($oldName !== $menu->name) {
+            return redirect()->route('dopasowanie')
+                ->with('info', 'Nazwa dania została zmieniona z "' . $oldName . '" na "' . $menu->name . '"');
+        }
+
+        return redirect()->route('dopasowanie')
+            ->with('success', 'Danie "' . $menu->name . '" zostało zaktualizowane.');
     }
 
     public function destroy($id)
     {
         $menu = Menu::findOrFail($id);
+        $name = $menu->name;
         $menu->delete();
 
-        return redirect()->route('dopasowanie')->with('success', 'Menu zostało usunięte.');
+        return redirect()->route('dopasowanie')
+            ->with('warning', 'Danie "' . $name . '" zostało usunięte z menu.');
     }
 }

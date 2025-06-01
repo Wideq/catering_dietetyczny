@@ -13,7 +13,7 @@ class IsAdmin
         if (Auth::check() && Auth::user()->role === 'admin') {
             return $next($request);
         }
-
-        abort(403, 'Brak dostępu');
+        
+        return redirect('/')->with('error', 'Nie masz uprawnień administratora.');
     }
 }

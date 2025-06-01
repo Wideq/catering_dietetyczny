@@ -107,7 +107,6 @@
         <p>Witaj na swoim panelu! Tutaj możesz zarządzać swoim kontem, przeglądać zamówienia i dostosowywać swoje preferencje.</p>
         <a href="{{ url('/') }}" class="btn-dashboard">Powrót do strony głównej</a>
         @if(Auth::user() && Auth::user()->role === 'admin')
-            <a href="{{ url('/users/edit') }}" class="btn-dashboard">Edytuj użytkowników</a>
             <a href="{{ url('/users') }}" class="btn-dashboard">Lista użytkowników</a>
             <a href="{{ route('menu.create') }}" class="btn-dashboard">Dodaj danie do menu</a>
             <a href="{{ route('transactions.index') }}" class="btn-dashboard">Zarządzaj transakcjami</a>
@@ -115,12 +114,12 @@
 
             <div class="charts-container">
                 <div class="chart-box">
-                    <h3 class="chart-title">Statystyki systemu</h3>
-                    <canvas id="statsChart"></canvas>
+                    <h3 class="chart-title">Status zamówień</h3>
+                    <canvas id="ordersStatusChart" data-orders="{{ json_encode($orderStatuses) }}"></canvas>
                 </div>
                 <div class="chart-box">
-                    <h3 class="chart-title">Status zamówień</h3>
-                    <canvas id="ordersChart"></canvas>
+                    <h3 class="chart-title">Najczęściej zamawiane dania</h3>
+                    <canvas id="popularDishesChart" data-dishes="{{ json_encode($popularDishes) }}"></canvas>
                 </div>
             </div>
         @endif
@@ -133,38 +132,90 @@
 <script>
 window.addEventListener('load', function() {
     setTimeout(() => {
-        if(document.getElementById('statsChart') && document.getElementById('ordersChart')) {
+        if(document.getElementById('ordersStatusChart') && document.getElementById('popularDishesChart')) {
             initializeCharts();
         }
     }, 100);
 });
 
 function initializeCharts() {
-    // Statystyki systemu
-    const statsCtx = document.getElementById('statsChart').getContext('2d');
-    const statsData = {
-        users: @json(\App\Models\User::count()),
-        orders: @json(\App\Models\Order::count()),
-        menu: @json(\App\Models\Menu::count())
-    };
-
-    new Chart(statsCtx, {
-        type: 'bar',
+    // Wykres statusów zamówień
+    const ordersStatusChart = document.getElementById('ordersStatusChart');
+    const orderStatusData = JSON.parse(ordersStatusChart.dataset.orders);
+    
+    const ordersCtx = ordersStatusChart.getContext('2d');
+    new Chart(ordersCtx, {
+        type: 'doughnut',
         data: {
-            labels: ['Użytkownicy', 'Zamówienia', 'Menu'],
+            labels: Object.keys(orderStatusData),
             datasets: [{
-                label: 'Ilość',
-                data: [statsData.users, statsData.orders, statsData.menu],
+                data: Object.values(orderStatusData),
                 backgroundColor: [
-                    'rgba(54, 162, 235, 0.5)',
-                    'rgba(75, 192, 192, 0.5)',
-                    'rgba(255, 206, 86, 0.5)'
+                    'rgba(255, 99, 132, 0.7)',  // czerwony - nowe
+                    'rgba(54, 162, 235, 0.7)',  // niebieski - w realizacji
+                    'rgba(75, 192, 192, 0.7)',  // zielony - zakończone
+                    'rgba(255, 159, 64, 0.7)'   // pomarańczowy - anulowane
                 ],
                 borderColor: [
+                    'rgba(255, 99, 132, 1)',
                     'rgba(54, 162, 235, 1)',
                     'rgba(75, 192, 192, 1)',
-                    'rgba(255, 206, 86, 1)'
+                    'rgba(255, 159, 64, 1)'
                 ],
+                borderWidth: 1
+            }]
+        },
+        options: {
+            responsive: true,
+            maintainAspectRatio: false,
+            plugins: {
+                legend: {
+                    position: 'bottom'
+                },
+                tooltip: {
+                    callbacks: {
+                        label: function(context) {
+                            const label = context.label || '';
+                            const value = context.raw || 0;
+                            const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                            const percentage = Math.round((value / total) * 100);
+                            return `${label}: ${value} (${percentage}%)`;
+                        }
+                    }
+                }
+            }
+        }
+    });
+
+    // Wykres najczęściej zamawianych dań
+    const popularDishesChart = document.getElementById('popularDishesChart');
+    const popularDishesData = JSON.parse(popularDishesChart.dataset.dishes);
+    
+    // Przygotowanie kolorów dla słupków
+    const generateColors = (count) => {
+        const colors = [];
+        for (let i = 0; i < count; i++) {
+            const hue = (i * 50) % 360;
+            colors.push(`hsla(${hue}, 70%, 60%, 0.7)`);
+        }
+        return colors;
+    };
+    
+    const dishesLabels = Object.keys(popularDishesData);
+    const dishesValues = Object.values(popularDishesData);
+    const backgroundColors = generateColors(dishesLabels.length);
+    const borderColors = backgroundColors.map(color => color.replace('0.7', '1'));
+    
+    const dishesCtx = popularDishesChart.getContext('2d');
+    new Chart(dishesCtx, {
+        type: 'bar',
+        data: {
+            labels: dishesLabels,
+            datasets: [{
+                label: 'Ilość zamówień',
+                data: dishesValues,
+                backgroundColor: backgroundColors,
+                borderColor: borderColors,
                 borderWidth: 1
             }]
         },
@@ -178,43 +229,20 @@ function initializeCharts() {
                         stepSize: 1
                     }
                 }
-            }
-        }
-    });
-
-    // Status zamówień
-    const ordersCtx = document.getElementById('ordersChart').getContext('2d');
-    const orderStats = {
-        new: @json(\App\Models\Order::where('status', 'new')->count()),
-        inProgress: @json(\App\Models\Order::where('status', 'in_progress')->count()),
-        completed: @json(\App\Models\Order::where('status', 'completed')->count())
-    };
-
-    new Chart(ordersCtx, {
-        type: 'doughnut',
-        data: {
-            labels: ['Nowe', 'W realizacji', 'Zakończone'],
-            datasets: [{
-                data: [orderStats.new, orderStats.inProgress, orderStats.completed],
-                backgroundColor: [
-                    'rgba(255, 206, 86, 0.5)',
-                    'rgba(54, 162, 235, 0.5)',
-                    'rgba(75, 192, 192, 0.5)'
-                ],
-                borderColor: [
-                    'rgba(255, 206, 86, 1)',
-                    'rgba(54, 162, 235, 1)',
-                    'rgba(75, 192, 192, 1)'
-                ],
-                borderWidth: 1
-            }]
-        },
-        options: {
-            responsive: true,
-            maintainAspectRatio: false,
+            },
             plugins: {
                 legend: {
-                    position: 'bottom'
+                    display: false
+                },
+                tooltip: {
+                    callbacks: {
+                        title: function(tooltipItems) {
+                            return tooltipItems[0].label;
+                        },
+                        label: function(context) {
+                            return `Ilość zamówień: ${context.raw}`;
+                        }
+                    }
                 }
             }
         }

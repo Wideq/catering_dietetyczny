@@ -52,6 +52,57 @@
             text-align: center;
             padding: 1rem 0;
         }
+
+        /* Styl powiadomień */
+        .notification-container {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            z-index: 1050;
+            max-width: 350px;
+        }
+
+        .alert {
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            border-left: 4px solid;
+            animation: slideInRight 0.5s forwards;
+        }
+
+        .alert-success {
+            border-left-color: #198754;
+        }
+
+        .alert-danger {
+            border-left-color: #dc3545;
+        }
+
+        .alert-warning {
+            border-left-color: #ffc107;
+        }
+
+        .alert-info {
+            border-left-color: #0dcaf0;
+        }
+
+        @keyframes slideInRight {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        @keyframes fadeOut {
+            from {
+                opacity: 1;
+            }
+            to {
+                opacity: 0;
+            }
+        }
     </style>
 </head>
 
@@ -64,32 +115,93 @@
                 <span class="navbar-toggler-icon"></span>
             </button>
 
-            <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto align-items-lg-center">
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url('/cennik') }}">Cennik</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url('/dopasowanie') }}">Menu</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="{{ url('/dostawa') }}">Dostawa</a>
-                    </li>
-                    <li class="nav-item ms-lg-3">
-                        @if(Auth::check())
-                            <a href="{{ route('dashboard') }}" class="btn btn-outline-light btn-sm px-3 py-1">
-                                <i class="fas fa-user"></i> Panel
-                            </a>
-                        @else
-                            <a href="{{ route('login') }}" class="btn btn-outline-light btn-sm px-3 py-1">
-                                Zaloguj
-                            </a>
-                        @endif
-                    </li>
-                </ul>
-            </div>
+<div class="collapse navbar-collapse" id="navbarNav">
+    <ul class="navbar-nav ms-auto align-items-lg-center">
+        <li class="nav-item">
+            <a class="nav-link" href="{{ url('/cennik') }}">Cennik</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="{{ url('/dopasowanie') }}">Menu</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" href="{{ url('/dostawa') }}">Dostawa</a>
+        </li>
+        @if(Auth::check())
+            <li class="nav-item ms-lg-3 me-lg-2">
+                <a href="{{ route('cart.index') }}" class="btn btn-outline-warning btn-sm px-3 py-1">
+                    <i class="fas fa-shopping-cart"></i>
+                    @if(session()->has('cart') && count(session('cart')) > 0)
+                        <span class="badge bg-danger ms-1">{{ count(session('cart')) }}</span>
+                    @endif
+                </a>
+            </li>
+        @endif
+        <li class="nav-item">
+            @if(Auth::check())
+                <a href="{{ route('dashboard') }}" class="btn btn-outline-light btn-sm px-3 py-1 me-2">
+                    <i class="fas fa-user"></i> Panel
+                </a>
+            </li>
+            <li class="nav-item">
+                <form method="POST" action="{{ route('logout') }}">
+                    @csrf
+                    <button type="submit" class="btn btn-outline-danger btn-sm px-3 py-1">
+                        <i class="fas fa-sign-out-alt"></i> Wyloguj
+                    </button>
+                </form>
+            @else
+                <a href="{{ route('login') }}" class="btn btn-outline-light btn-sm px-3 py-1">
+                    Zaloguj
+                </a>
+            @endif
+        </li>
+    </ul>
+</div>
         </div>
     </nav>
+
+    <!-- Kontener powiadomień -->
+    <div class="notification-container">
+        @if(session('success'))
+        <div class="alert alert-success alert-dismissible fade show" role="alert">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-check-circle me-2"></i>
+                <div>{{ session('success') }}</div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        @endif
+
+        @if(session('error'))
+        <div class="alert alert-danger alert-dismissible fade show" role="alert">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-exclamation-circle me-2"></i>
+                <div>{{ session('error') }}</div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        @endif
+
+        @if(session('warning'))
+        <div class="alert alert-warning alert-dismissible fade show" role="alert">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-exclamation-triangle me-2"></i>
+                <div>{{ session('warning') }}</div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        @endif
+
+        @if(session('info'))
+        <div class="alert alert-info alert-dismissible fade show" role="alert">
+            <div class="d-flex align-items-center">
+                <i class="fas fa-info-circle me-2"></i>
+                <div>{{ session('info') }}</div>
+            </div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+        @endif
+    </div>
 
     <main class="container my-5" data-aos="fade-up">
         @yield('content')
@@ -108,6 +220,17 @@
 
         document.addEventListener("DOMContentLoaded", () => {
             document.body.classList.add("fade-in");
+            
+            // Auto-hide notifications after 5 seconds
+            const alerts = document.querySelectorAll('.alert');
+            alerts.forEach(function(alert) {
+                setTimeout(function() {
+                    alert.style.animation = 'fadeOut 0.5s forwards';
+                    setTimeout(function() {
+                        alert.remove();
+                    }, 500);
+                }, 5000);
+            });
         });
 
         document.querySelectorAll('a.nav-link, a.btn').forEach(link => {

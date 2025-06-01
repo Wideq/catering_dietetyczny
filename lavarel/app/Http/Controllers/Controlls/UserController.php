@@ -3,71 +3,125 @@
 namespace App\Http\Controllers\Controlls;
 
 use App\Models\User;
+use App\Http\Requests\UserRequest;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Log;
-use App\Http\Requests\UserRequest;
-
+use Illuminate\Foundation\Auth\Access\AuthorizesRequests;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Notifications\Notifiable;
 class UserController extends Controller
 {
-    // Metoda do wyświetlania formularza rejestracji
-    public function create()
+    use AuthorizesRequests;
+    /**
+     * Display a listing of users
+     */
+    public function index()
     {
-        return view('register'); // Widok formularza rejestracji
+        $users = User::paginate(10); // Added pagination
+        return view('users.index', compact('users'));
     }
 
-    // Metoda do zapisywania użytkownika
-    
+    /**
+     * Show registration form
+     */
+    public function create()
+    {
+        return view('register');
+    }
 
-public function store(Request $request)
+    /**
+     * Store a new user
+     */
+    public function store(Request $request)
+    {
+        try {
+            $validated = $request->validate([
+                'name' => 'required|string|max:255',
+                'email' => 'required|email|unique:users,email',
+                'password' => 'required|string|min:8|confirmed',
+            ]);
+
+            $user = User::create([
+                'name' => $validated['name'],
+                'email' => $validated['email'],
+                'password' => Hash::make($validated['password']),
+                'role' => 'user', // Add default role
+            ]);
+
+            Auth::login($user);
+            
+            return redirect()->route('user.dashboard')
+                           ->with('success', 'Rejestracja zakończona pomyślnie!');
+        } catch (\Exception $e) {
+            Log::error('User registration failed: ' . $e->getMessage());
+            return back()->withErrors(['error' => 'Wystąpił błąd podczas rejestracji.'])
+                        ->withInput($request->except('password'));
+        }
+    }
+
+    /**
+     * Show edit form for user
+     */
+    public function edit($id)
+    {
+        $user = User::findOrFail($id);
+        $this->authorize('update', $user); // Add authorization check
+        return view('users.edit', compact('user'));
+    }
+
+    /**
+     * Update user details
+     */
+    public function update(UserRequest $request, $id)
 {
-    // Walidacja danych wejściowych
-    $validated = $request->validate([
-        'name' => 'required|string|max:255',
-        'email' => 'required|email|unique:users,email',
-        'password' => 'required|string|min:8|confirmed', // Potwierdzenie hasła
-    ]);
+    try {
+        $user = User::findOrFail($id);
+        // Można usunąć authorize jeśli zarządzanie użytkownikami jest tylko dla adminów
+        // $this->authorize('update', $user);
 
-    // Tworzenie nowego użytkownika
-    $user = User::create([
-        'name' => $validated['name'],
-        'email' => $validated['email'],
-        'password' => Hash::make($validated['password']),
-    ]);
+        // Zbierz dane podstawowe
+        $data = [
+            'name' => $request->name,
+            'email' => $request->email,
+            'role' => $request->role, // Dodane pole roli
+        ];
+        
+        // Dodaj hasło tylko jeśli zostało podane
+        if ($request->filled('password')) {
+            $data['password'] = Hash::make($request->password);
+        }
 
-    // Logowanie użytkownika po rejestracji
-    Auth::login($user);
+        $user->update($data);
 
-    // Przekierowanie do strony po zalogowaniu (np. strona główna)
-    return redirect()->route('index');
+        return redirect()->route('users.index')
+                       ->with('success', 'Użytkownik został zaktualizowany.');
+    } catch (\Exception $e) {
+        Log::error('User update failed: ' . $e->getMessage());
+        return back()->withErrors(['error' => 'Wystąpił błąd podczas aktualizacji: ' . $e->getMessage()]);
+    }
 }
+    /**
+     * Delete user
+     */
+    public function destroy($id)
+    {
+        try {
+            $user = User::findOrFail($id);
+            $this->authorize('delete', $user); // Add authorization check
 
-public function index()
-{
-    $users = \App\Models\User::all();
-    return view('users.index', compact('users'));
-}
-public function edit($id)
-{
-    $user = \App\Models\User::findOrFail($id);
-    return view('users.edit', compact('user'));
-}
+            if ($user->id === Auth::id()) {
+                return back()->withErrors(['error' => 'Nie możesz usunąć własnego konta.']);
+            }
 
-public function update(UserRequest $request, $id)
-{
-    $user = User::findOrFail($id);
-    $user->update($request->validated());
-
-    return redirect()->route('users.index')->with('success', 'Użytkownik został zaktualizowany.');
+            $user->delete();
+            return redirect()->route('users.index')
+                           ->with('success', 'Użytkownik został usunięty.');
+        } catch (\Exception $e) {
+            Log::error('User deletion failed: ' . $e->getMessage());
+            return back()->withErrors(['error' => 'Wystąpił błąd podczas usuwania użytkownika.']);
+        }
+    }
 }
-public function destroy($id)
-{
-    $user = \App\Models\User::findOrFail($id);
-    $user->delete();
-    return redirect()->route('users.index')->with('success', 'Użytkownik usunięty');
-}
-
-}
-

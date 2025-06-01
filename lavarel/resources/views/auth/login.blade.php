@@ -94,22 +94,83 @@
     .login-footer a:hover {
         color: var(--accent-color);
     }
+
+    .invalid-feedback {
+        color: #dc3545;
+        font-size: 0.875rem;
+        margin-top: 0.25rem;
+    }
+
+    .is-invalid {
+        border-color: #dc3545 !important;
+    }
+
+    .is-invalid:focus {
+        box-shadow: 0 0 0 0.25rem rgba(220, 53, 69, 0.25) !important;
+    }
+
+    .alert {
+        padding: 1rem;
+        margin-bottom: 1rem;
+        border-radius: 8px;
+        font-weight: 500;
+    }
+
+    .alert-danger {
+        background-color: #f8d7da;
+        color: #842029;
+        border: 1px solid #f5c2c7;
+    }
 </style>
 @endpush
 
 @section('content')
 <div class="login-container animate__animated animate__fadeIn">
     <h2 class="login-title">Zaloguj się</h2>
+
+    @if ($errors->any())
+        <div class="alert alert-danger">
+            <ul class="mb-0 list-unstyled">
+                @foreach ($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     <form method="POST" action="{{ route('login') }}">
         @csrf
         <div class="form-group">
             <label for="email" class="form-label">Email</label>
-            <input type="email" name="email" class="form-control" id="email" placeholder="Wprowadź swój email" required>
+            <input type="email" 
+                   name="email" 
+                   class="form-control @error('email') is-invalid @enderror" 
+                   id="email" 
+                   placeholder="Wprowadź swój email" 
+                   value="{{ old('email') }}"
+                   required>
+            @error('email')
+                <div class="invalid-feedback">
+                    {{ $message }}
+                </div>
+            @enderror
         </div>
+
         <div class="form-group">
             <label for="password" class="form-label">Hasło</label>
-            <input type="password" name="password" class="form-control" id="password" placeholder="Wprowadź hasło" required>
+            <input type="password" 
+                   name="password" 
+                   class="form-control @error('password') is-invalid @enderror" 
+                   id="password" 
+                   placeholder="Wprowadź hasło" 
+                   required>
+            @error('password')
+                <div class="invalid-feedback">
+                    {{ $message }}
+                </div>
+            @enderror
         </div>
+
         <button type="submit" class="btn-login">Zaloguj się</button>
     </form>
 
@@ -118,9 +179,3 @@
     </div>
 </div>
 @endsection
-
-@push('scripts')
-<script>
-    AOS.init();
-</script>
-@endpush

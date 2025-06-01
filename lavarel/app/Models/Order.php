@@ -9,7 +9,15 @@ class Order extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['user_id', 'menu_id', 'quantity', 'status', 'order_date'];
+    protected $fillable = [
+        'user_id', 
+        'menu_id', 
+        'quantity', 
+        'status', 
+        'order_date',
+        'transaction_id'.
+        'total_amount' 
+    ];
 
     public function user()
     {
@@ -20,4 +28,13 @@ class Order extends Model
     {
         return $this->belongsTo(Menu::class);
     }
+
+    public function transaction()
+    {
+        return $this->belongsTo(Transaction::class);
+    }
+    public function items()
+{
+    return $this->hasMany(OrderItem::class);
+}
 }

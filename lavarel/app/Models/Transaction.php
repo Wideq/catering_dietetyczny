@@ -9,5 +9,21 @@ class Transaction extends Model
 {
     use HasFactory;
 
-    protected $fillable = ['amount', 'description', 'status'];
+    protected $fillable = [
+        'user_id', 
+        'amount', 
+        'description', 
+        'status',
+        'payment_method'
+    ];
+
+    public function user()
+    {
+        return $this->belongsTo(User::class);
+    }
+
+    public function orders()
+    {
+        return $this->hasMany(Order::class);
+    }
 }

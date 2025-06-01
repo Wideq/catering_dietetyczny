@@ -36,6 +36,23 @@
         font-size: 1.1rem;
         color: var(--accent-color);
     }
+    .btn-add-to-cart {
+        background-color: var(--accent-color);
+        color: white;
+        transition: all 0.3s ease;
+    }
+
+    .btn-add-to-cart:hover {
+        background-color: #e67e22;
+        color: white;
+        transform: translateY(-2px);
+    }
+
+    .admin-buttons {
+        border-top: 1px solid #eee;
+        padding-top: 1rem;
+        margin-top: 1rem;
+    }
 </style>
 @endpush
 
@@ -54,14 +71,33 @@
                     <h5 class="card-title">{{ $menu->name }}</h5>
                     <p class="card-text text-muted flex-grow-1">{{ $menu->description }}</p>
                     <p class="card-text fw-bold">Cena: {{ number_format($menu->price, 2) }} zł</p>
-                    <div class="d-flex justify-content-end mt-3">
-                        <a href="{{ route('menu.edit', $menu->id) }}" class="btn btn-sm btn-primary me-2">Edytuj</a>
-                        <form action="{{ route('menu.destroy', $menu->id) }}" method="POST" onsubmit="return confirm('Czy na pewno chcesz usunąć to menu?')">
+                    
+                    @auth
+                        <form action="{{ route('cart.add', $menu->id) }}" method="POST" class="mb-3">
                             @csrf
-                            @method('DELETE')
-                            <button type="submit" class="btn btn-sm btn-danger">Usuń</button>
+                            <button type="submit" class="btn btn-add-to-cart w-100">
+                                <i class="fas fa-shopping-cart me-2"></i>Dodaj do koszyka
+                            </button>
                         </form>
-                    </div>
+                    @endauth
+
+                    @if(Auth::check() && Auth::user()->role === 'admin')
+                        <div class="admin-buttons">
+                            <div class="d-flex justify-content-between">
+                                <a href="{{ route('menu.edit', $menu->id) }}" class="btn btn-sm btn-primary">
+                                    <i class="fas fa-edit me-1"></i>Edytuj
+                                </a>
+                                <form action="{{ route('menu.destroy', $menu->id) }}" method="POST" 
+                                      onsubmit="return confirm('Czy na pewno chcesz usunąć to menu?')">
+                                    @csrf
+                                    @method('DELETE')
+                                    <button type="submit" class="btn btn-sm btn-danger">
+                                        <i class="fas fa-trash me-1"></i>Usuń
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    @endif
                 </div>
             </div>
         </div>
