@@ -8,6 +8,8 @@ use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Controlls\MenuController;
 use App\Http\Controllers\Controlls\TransactionController;
 use App\Http\Controllers\Controlls\OrderController;
+use App\Http\Controllers\Controlls\DashboardController;
+use App\Http\Controllers\Controlls\UserController;
 
 // ==================== Strona główna i statyczne strony ====================
 
@@ -31,10 +33,9 @@ Route::get('/dostawa', function () {
 
 // ==================== Dashboard ====================
 
-// Dashboard (zabezpieczony, np. po zalogowaniu)
-Route::get('/dashboard', function () {
-    return view('dashboard');
-})->middleware(['auth', 'verified'])->name('dashboard');
+Route::get('/dashboard', [DashboardController::class, 'index'])
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard');
 
 // ==================== Profile użytkownika ====================
 
@@ -61,85 +62,70 @@ Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
 
 // ==================== Rejestracja użytkownika ====================
 
-// Formularz rejestracji
-Route::get('/register', [App\Http\Controllers\Controlls\UserController::class, 'create'])->name('register');
+Route::get('/register', [UserController::class, 'create'])
+    ->middleware('guest')
+    ->name('register');
 
-// Obsługa rejestracji
-Route::post('/register', [App\Http\Controllers\Controlls\UserController::class, 'store'])->name('register.store');
+Route::post('/register', [UserController::class, 'store'])
+    ->middleware('guest')
+    ->name('register.store');
 
 // ==================== Zarządzanie użytkownikami ====================
 
-// Lista użytkowników
-Route::get('/users', function () {
-    $users = User::all(); 
-    return view('users.index', compact('users')); 
-})->middleware('auth')->name('users.index');
+Route::middleware(['auth', 'admin'])->group(function () {
+    // Lista użytkowników
+    Route::get('/users', function () {
+        $users = User::all(); 
+        return view('users.index', compact('users')); 
+    })->name('users.index');
 
-// Edycja użytkownika (z ID)
-Route::get('/users/edit/{id}', function ($id) {
-    $user = User::findOrFail($id); 
-    return view('users.edit', compact('user')); 
-})->middleware('auth')->name('users.edit');
+    // Edycja użytkownika
+    Route::get('/users/edit/{id}', function ($id) {
+        $user = User::findOrFail($id); 
+        return view('users.edit', compact('user')); 
+    })->name('users.edit');
 
-// Aktualizacja użytkownika
-Route::put('/users/update/{id}', function (Request $request, $id) {
-    $user = User::findOrFail($id);
-    $user->update($request->only(['name', 'email']));
-    return redirect()->route('users.index')->with('success', 'Dane użytkownika zostały zaktualizowane.');
-})->middleware('auth')->name('users.update');
+    // Aktualizacja użytkownika
+    Route::put('/users/update/{id}', function (Request $request, $id) {
+        $user = User::findOrFail($id);
+        $user->update($request->only(['name', 'email']));
+        return redirect()->route('users.index')->with('success', 'Dane użytkownika zostały zaktualizowane.');
+    })->name('users.update');
 
-// Usuwanie użytkownika
-Route::delete('/users/{id}', function ($id) {
-    $user = User::findOrFail($id); 
-    $user->delete(); 
-    return redirect()->route('users.index')->with('success', 'Użytkownik został usunięty.');
-})->middleware('auth')->name('users.destroy');
+    // Usuwanie użytkownika
+    Route::delete('/users/{id}', function ($id) {
+        $user = User::findOrFail($id); 
+        $user->delete(); 
+        return redirect()->route('users.index')->with('success', 'Użytkownik został usunięty.');
+    })->name('users.destroy');
+});
 
 // ==================== Zarządzanie menu ====================
 
-// Formularz dodawania dania do menu
-Route::get('add-menu', [MenuController::class, 'create'])->middleware('auth')->name('menu.create');
-
-// Zapis nowego dania do menu
-Route::post('add-menu', [MenuController::class, 'store'])->middleware('auth')->name('menu.store');
-
-// Edycja dania w menu
-Route::get('/menu/edit/{id}', [MenuController::class, 'edit'])->name('menu.edit');
-Route::put('/menu/update/{id}', [MenuController::class, 'update'])->name('menu.update');
-
-// Usuwanie dania z menu
-Route::delete('/menu/{id}', [MenuController::class, 'destroy'])->name('menu.destroy');
+Route::middleware(['auth', 'admin'])->group(function () {
+    Route::get('add-menu', [MenuController::class, 'create'])->name('menu.create');
+    Route::post('add-menu', [MenuController::class, 'store'])->name('menu.store');
+    Route::get('/menu/edit/{id}', [MenuController::class, 'edit'])->name('menu.edit');
+    Route::put('/menu/update/{id}', [MenuController::class, 'update'])->name('menu.update');
+    Route::delete('/menu/{id}', [MenuController::class, 'destroy'])->name('menu.destroy');
+});
 
 // ==================== Zarządzanie transakcjami ====================
 
-// Lista transakcji
-Route::get('/transactions', [TransactionController::class, 'index'])->middleware('auth')->name('transactions.index');
-
-// Edycja transakcji
-Route::get('/transactions/edit/{id}', [TransactionController::class, 'edit'])->middleware('auth')->name('transactions.edit');
-
-// Aktualizacja transakcji
-Route::put('/transactions/update/{id}', [TransactionController::class, 'update'])->middleware('auth')->name('transactions.update');
-
-// Usuwanie transakcji
-Route::delete('/transactions/{id}', [TransactionController::class, 'destroy'])->middleware('auth')->name('transactions.destroy');
+Route::middleware(['auth', 'admin'])->group(function () {
+    Route::get('/transactions', [TransactionController::class, 'index'])->name('transactions.index');
+    Route::get('/transactions/edit/{id}', [TransactionController::class, 'edit'])->name('transactions.edit');
+    Route::put('/transactions/update/{id}', [TransactionController::class, 'update'])->name('transactions.update');
+    Route::delete('/transactions/{id}', [TransactionController::class, 'destroy'])->name('transactions.destroy');
+});
 
 // ==================== Zarządzanie zamówieniami ====================
 
-// Lista zamówień
-Route::get('/orders', [OrderController::class, 'index'])->middleware('auth')->name('orders.index');
-
-// Formularz dodawania zamówienia
-Route::get('/orders/create', [OrderController::class, 'create'])->middleware('auth')->name('orders.create');
-
-// Zapis nowego zamówienia
-Route::post('/orders', [OrderController::class, 'store'])->middleware('auth')->name('orders.store');
-
-// Formularz edycji zamówienia
-Route::get('/orders/edit/{id}', [OrderController::class, 'edit'])->middleware('auth')->name('orders.edit');
-
-// Aktualizacja zamówienia
-Route::put('/orders/update/{id}', [OrderController::class, 'update'])->middleware('auth')->name('orders.update');
-
-// Usuwanie zamówienia
-Route::delete('/orders/{id}', [OrderController::class, 'destroy'])->middleware('auth')->name('orders.destroy');
+Route::middleware('auth')->group(function () {
+    Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
+    Route::get('/orders/create', [OrderController::class, 'create'])->name('orders.create');
+    Route::post('/orders', [OrderController::class, 'store'])->name('orders.store');
+    Route::get('/orders/edit/{id}', [OrderController::class, 'edit'])->name('orders.edit');
+    Route::put('/orders/update/{id}', [OrderController::class, 'update'])->name('orders.update');
+    Route::delete('/orders/{id}', [OrderController::class, 'destroy'])->name('orders.destroy');
+});
