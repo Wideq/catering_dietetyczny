@@ -65,6 +65,14 @@
         color: var(--secondary-color);
     }
 
+    .btn-diet {
+        background-color: #27ae60; /* zielony kolor dla odróżnienia przycisku diet */
+    }
+
+    .btn-diet:hover {
+        background-color: #219653;
+    }
+
     .charts-container {
         display: grid;
         grid-template-columns: 1fr 1fr;
@@ -111,6 +119,8 @@
             <a href="{{ route('menu.create') }}" class="btn-dashboard">Dodaj danie do menu</a>
             <a href="{{ route('transactions.index') }}" class="btn-dashboard">Zarządzaj transakcjami</a>
             <a href="{{ route('orders.index') }}" class="btn-dashboard">Zarządzaj zamówieniami</a>
+            <a href="{{ route('diet-plans.index') }}" class="btn-dashboard btn-diet">Zarządzaj dietami</a>
+            <a href="{{ route('diet-plans.create') }}" class="btn-dashboard btn-diet">Dodaj nową dietę</a>
 
             <div class="charts-container">
                 <div class="chart-box">

@@ -1,20 +1,35 @@
 <?php
+// filepath: c:\Users\kosow\Desktop\catering_dietetyczny\lavarel\app\Models\Menu.php
 
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Menu extends Model
 {
     use HasFactory;
 
-    protected $table = 'menus'; 
+    protected $fillable = [
+        'name',
+        'description',
+        'price',
+        'image',
+        'category', // Add this line
+        'calories',
+        'protein',
+        'carbs',
+        'fat'
+    ];
 
-    protected $fillable = ['name', 'description', 'price', 'image'];
-
-    public function orders()
+    /**
+     * Relacja z planami diet
+     */
+    public function dietPlans(): BelongsToMany
     {
-        return $this->hasMany(Order::class);
+        return $this->belongsToMany(DietPlan::class, 'menu_diet_plan')
+                    ->withPivot('meal_type', 'day')
+                    ->withTimestamps();
     }
 }

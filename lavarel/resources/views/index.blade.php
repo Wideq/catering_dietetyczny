@@ -376,6 +376,17 @@
         background-color: var(--secondary-color);
         color: var(--gray-medium);
     }
+    
+    /* Dla obrazów diet */
+    .diet-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+    }
+    
+    .no-image-icon {
+        font-size: 3.5rem;
+    }
 </style>
 @endpush
 
@@ -396,53 +407,33 @@
         </div>
         
         <div class="row g-4">
-            <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="100">
-                <div class="offer-card">
-                    <div class="offer-image">
-                        <i class="fas fa-utensils offer-icon"></i>
-                    </div>
-                    <div class="offer-body">
-                        <h3 class="offer-title">Dieta Standard</h3>
-                        <p class="offer-text">Zbilansowane posiłki dostosowane do Twoich potrzeb kalorycznych, zapewniające wszystkie niezbędne składniki odżywcze.</p>
-                        <div class="offer-price">
-                            Od 59 zł <span>/ dzień</span>
+            @forelse ($dietPlans as $dietPlan)
+                <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="{{ $loop->iteration * 100 }}">
+                    <div class="offer-card">
+                        <div class="offer-image">
+                            @if($dietPlan->image)
+                                <img src="{{ asset('storage/' . $dietPlan->image) }}" alt="{{ $dietPlan->name }}" class="diet-image">
+                            @else
+                                <i class="fas {{ $dietPlan->icon ?? 'fa-utensils' }} offer-icon"></i>
+                            @endif
                         </div>
-                        <a href="#" class="btn btn-primary w-100">Zamów teraz</a>
+                        <div class="offer-body">
+                            <h3 class="offer-title">{{ $dietPlan->name }}</h3>
+                            <p class="offer-text">{{ Str::limit($dietPlan->description, 100) }}</p>
+                            <div class="offer-price">
+                                Od {{ number_format($dietPlan->price_per_day, 2) }} zł <span>/ dzień</span>
+                            </div>
+                            <a href="{{ route('diet-plans.show', $dietPlan->id) }}" class="btn btn-primary w-100">Zamów teraz</a>
+                        </div>
                     </div>
                 </div>
-            </div>
-            
-            <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="200">
-                <div class="offer-card">
-                    <div class="offer-image">
-                        <i class="fas fa-carrot offer-icon"></i>
-                    </div>
-                    <div class="offer-body">
-                        <h3 class="offer-title">Dieta Vege</h3>
-                        <p class="offer-text">Pełnowartościowe posiłki wegetariańskie, bogate w białko roślinne, witaminy i minerały.</p>
-                        <div class="offer-price">
-                            Od 65 zł <span>/ dzień</span>
-                        </div>
-                        <a href="#" class="btn btn-primary w-100">Zamów teraz</a>
+            @empty
+                <div class="col-12 text-center">
+                    <div class="alert alert-info">
+                        <p>Obecnie nie mamy dostępnych diet. Prosimy spróbować później.</p>
                     </div>
                 </div>
-            </div>
-            
-            <div class="col-lg-4 col-md-6" data-aos="fade-up" data-aos-delay="300">
-                <div class="offer-card">
-                    <div class="offer-image">
-                        <i class="fas fa-dumbbell offer-icon"></i>
-                    </div>
-                    <div class="offer-body">
-                        <h3 class="offer-title">Dieta Sport</h3>
-                        <p class="offer-text">Specjalistyczna dieta wysokobiałkowa dla osób aktywnych, wspierająca regenerację i budowę mięśni.</p>
-                        <div class="offer-price">
-                            Od 69 zł <span>/ dzień</span>
-                        </div>
-                        <a href="#" class="btn btn-primary w-100">Zamów teraz</a>
-                    </div>
-                </div>
-            </div>
+            @endforelse
         </div>
     </div>
 </section>

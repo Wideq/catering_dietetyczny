@@ -12,6 +12,8 @@ use App\Http\Controllers\Controlls\DashboardController;
 use App\Http\Controllers\Controlls\UserController;
 use App\Http\Controllers\Controlls\UserDashboardController;
 use App\Http\Controllers\Controlls\CartController;
+use App\Http\Controllers\Controlls\DietPlanController;
+use App\Http\Controllers\Controlls\HomeController;
 use Illuminate\Support\Facades\Hash;
 
 // ==================== Strona główna i statyczne strony ====================
@@ -172,3 +174,16 @@ Route::middleware('auth')->group(function () {
     Route::delete('/cart/remove/{cartItem}', [CartController::class, 'remove'])->name('cart.remove');
     Route::post('/cart/checkout', [CartController::class, 'checkout'])->name('cart.checkout');
 });
+
+// Dodaj te trasy w pliku routes/web.php
+Route::middleware(['auth'])->group(function () {
+    
+    Route::resource('diet-plans', DietPlanController::class);
+    Route::get('diet-plans/{dietPlan}/manage-menu', [DietPlanController::class, 'manageMenu'])->name('diet-plans.manage-menu');
+    Route::put('diet-plans/{dietPlan}/update-menu', [DietPlanController::class, 'updateMenu'])->name('diet-plans.update-menu');
+});
+
+Route::get('diet-plans/{dietPlan}', [DietPlanController::class, 'show'])->name('diet-plans.show');
+
+// Zaktualizuj trasę strony głównej (zastąp obecną implementację, około linii 23)
+Route::get('/', [HomeController::class, 'index'])->name('home');
