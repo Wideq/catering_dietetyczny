@@ -285,11 +285,19 @@
                             @if(isset($order->items) && $order->items->count() > 0)
                                 <ul class="order-items">
                                     @foreach($order->items as $item)
-                                        <li>{{ $item->menu->name }} x {{ $item->quantity }} - {{ number_format($item->price * $item->quantity, 2) }} zł</li>
+                                        @if($item->item_type == 'diet_plan' && isset($item->dietPlan))
+                                            <li>{{ $item->dietPlan->name ?? 'Dieta' }} ({{ $item->duration ?? 0 }} dni od {{ \Carbon\Carbon::parse($item->start_date)->format('d.m.Y') }}) - {{ number_format($item->price, 2) }} zł</li>
+                                        @elseif(isset($item->menu))
+                                            <li>{{ $item->menu->name ?? 'Produkt' }} x {{ $item->quantity }} - {{ number_format($item->price * $item->quantity, 2) }} zł</li>
+                                        @else
+                                            <li>Pozycja #{{ $item->id }} x {{ $item->quantity }} - {{ number_format($item->price * $item->quantity, 2) }} zł</li>
+                                        @endif
                                     @endforeach
                                 </ul>
+                            @elseif(isset($order->menu) && $order->menu)
+                                {{ $order->menu->name }} x {{ $order->quantity }}
                             @else
-                                {{ $order->menu->name ?? 'Brak danych' }} x {{ $order->quantity }}
+                                Zamówienie #{{ $order->id }}
                             @endif
                         </td>
                         <td>
@@ -303,8 +311,10 @@
                                     }
                                 } elseif(isset($order->total_amount) && $order->total_amount > 0) {
                                     $totalAmount = $order->total_amount;
-                                } elseif(isset($order->menu)) {
+                                } elseif(isset($order->menu) && $order->menu) {
                                     $totalAmount = $order->menu->price * $order->quantity;
+                                } else {
+                                    $totalAmount = $order->total_amount ?? 0;
                                 }
                             @endphp
                             {{ number_format($totalAmount, 2) }} zł
@@ -316,7 +326,6 @@
         @else
             <p>Nie masz jeszcze żadnych zamówień.</p>
             
-            <!-- Kod diagnostyczny do wyświetlenia tylko podczas debugowania -->
             <div style="margin-top: 20px; padding: 15px; border: 1px solid #ddd; background: #f9f9f9;">
                 <p>ID użytkownika: {{ $user->id }}</p>
                 
@@ -332,7 +341,6 @@
 
 @push('scripts')
 <script>
-    // Auto-hide success alert after 5 seconds
     document.addEventListener('DOMContentLoaded', function() {
         const successAlert = document.querySelector('.alert-success');
         if (successAlert) {

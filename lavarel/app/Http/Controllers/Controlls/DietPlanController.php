@@ -9,7 +9,6 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Auth;
 
-// Ensure MenuItem model exists and is imported
 class DietPlanController extends Controller
 {
     public function index()
@@ -86,16 +85,16 @@ class DietPlanController extends Controller
             ->with('warning', 'Plan diety "' . $name . '" został usunięty.');
     }
 
-    /**
-     * Pokaż widok zarządzania menu dla diety
-     */
+
     public function manageMenu(DietPlan $dietPlan)
 {
-    // Pobierz wszystkie pozycje menu
     $menuItems = Menu::orderBy('category')->get();
+
+    $categories = $menuItems->pluck('category')->unique()->toArray();
+    $menuCount = $menuItems->count();
+    
     $selectedMenuItems = $dietPlan->menuItems()->pluck('menus.id')->toArray();
     
-    // Oblicz sumę cen wybranych pozycji menu
     $totalMealsPrice = 0;
     foreach($selectedMenuItems as $itemId) {
         $menuItem = $menuItems->find($itemId);
@@ -104,24 +103,22 @@ class DietPlanController extends Controller
         }
     }
     
-    // Oblicz rabat (możesz dostosować tę logikę)
     $discount = 0;
     $count = count($selectedMenuItems);
     if ($count >= 5 && $count < 10) {
-        $discount = $totalMealsPrice * 0.10; // 10% rabatu
+        $discount = $totalMealsPrice * 0.10; 
     } else if ($count >= 10) {
-        $discount = $totalMealsPrice * 0.15; // 15% rabatu
+        $discount = $totalMealsPrice * 0.15; 
     }
     
-    return view('diet-plans.manage-menu', compact('dietPlan', 'menuItems', 'selectedMenuItems'));
+    return view('diet-plans.manage-menu', compact('dietPlan', 'menuItems', 'selectedMenuItems', 'totalMealsPrice', 
+                                               'discount', 'categories', 'menuCount'));
 }
 
 public function updateMenu(Request $request, DietPlan $dietPlan)
 {
-    // Aktualizuj przypisane pozycje menu
     $dietPlan->menuItems()->sync($request->menu_items ?? []);
     
-    // Aktualizuj cenę jeśli została przekazana
     if ($request->has('price_per_day')) {
         $dietPlan->price_per_day = $request->price_per_day;
         $dietPlan->save();
@@ -133,7 +130,6 @@ public function updateMenu(Request $request, DietPlan $dietPlan)
 
 public function show(DietPlan $dietPlan)
 {
-    // Upewnij się, że wyświetlamy tylko aktywne diety dla zwykłych użytkowników
     $user = Auth::user();
     if (!$user || $user->role !== 'admin') {
         if (!$dietPlan->is_active) {

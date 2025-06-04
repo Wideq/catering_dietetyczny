@@ -313,31 +313,24 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Obsługa wyboru ikony
         const iconOptions = document.querySelectorAll('.icon-option');
         const iconInput = document.getElementById('icon');
         const iconPreview = document.getElementById('iconPreview');
         
         iconOptions.forEach(option => {
             option.addEventListener('click', function() {
-                // Usuń klasę selected ze wszystkich opcji
                 iconOptions.forEach(opt => opt.classList.remove('selected'));
                 
-                // Dodaj klasę selected do klikniętej opcji
                 this.classList.add('selected');
                 
-                // Pobierz wartość ikony
                 const iconValue = this.getAttribute('data-icon');
                 
-                // Aktualizuj pole formularza
                 iconInput.value = iconValue;
                 
-                // Aktualizuj podgląd
                 iconPreview.className = 'fas ' + iconValue;
             });
         });
         
-        // Obsługa podglądu obrazu
         const imageInput = document.getElementById('image');
         const imagePreviewContainer = document.getElementById('imagePreview');
         

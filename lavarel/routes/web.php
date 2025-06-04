@@ -187,3 +187,11 @@ Route::get('diet-plans/{dietPlan}', [DietPlanController::class, 'show'])->name('
 
 // Zaktualizuj trasę strony głównej (zastąp obecną implementację, około linii 23)
 Route::get('/', [HomeController::class, 'index'])->name('home');
+
+Route::middleware('auth')->group(function () {
+    Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
+    Route::post('/cart/add/{menuItem}', [CartController::class, 'add'])->name('cart.add');
+    Route::post('/cart/add-advanced', [CartController::class, 'addAdvanced'])->name('cart.addAdvanced'); 
+    Route::delete('/cart/remove/{cartItem}', [CartController::class, 'remove'])->name('cart.remove');
+    Route::post('/cart/checkout', [CartController::class, 'checkout'])->name('cart.checkout');
+});

@@ -10,10 +10,8 @@ class MenuController extends Controller
 {
     public function index()
     {
-        // Pobierz wszystkie dania z tabeli menus
         $menus = Menu::all();
 
-        // Przekaż dane do widoku
         return view('dopasowanie', compact('menus'));
     }
 

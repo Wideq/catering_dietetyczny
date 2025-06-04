@@ -1,7 +1,12 @@
 @extends('layout')
 
 @section('title', 'Zarządzanie posiłkami diety - PureMeal')
-
+@if(isset($menuCount) && isset($categories))
+    <div class="alert alert-info">
+        <p>Znaleziono {{$menuCount}} posiłków w bazie danych.</p>
+        <p>Kategorie: {{ implode(', ', array_filter($categories)) ?: 'Brak kategorii' }}</p>
+    </div>
+@endif
 @push('styles')
 <style>
     .menu-container {
@@ -427,7 +432,6 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Filtrowanie po kategoriach
         const filterButtons = document.querySelectorAll('.filter-btn');
         const menuItems = document.querySelectorAll('.menu-item');
         
@@ -435,11 +439,9 @@
             button.addEventListener('click', function() {
                 const filter = this.getAttribute('data-filter');
                 
-                // Aktualizuj aktywny przycisk
                 filterButtons.forEach(btn => btn.classList.remove('active'));
                 this.classList.add('active');
                 
-                // Filtruj pozycje menu
                 if (filter === 'all') {
                     menuItems.forEach(item => {
                         item.style.display = 'flex';
@@ -456,12 +458,10 @@
             });
         });
         
-        // Wyszukiwanie
         const searchInput = document.getElementById('searchInput');
         searchInput.addEventListener('input', function() {
             const searchTerm = this.value.toLowerCase().trim();
             
-            // Resetuj filtry
             if (searchTerm !== '') {
                 filterButtons.forEach(btn => btn.classList.remove('active'));
                 filterButtons[0].classList.add('active');
@@ -479,7 +479,6 @@
             });
         });
         
-        // Kalkulacja ceny
         const checkboxes = document.querySelectorAll('.menu-checkbox');
         const mealsPriceElement = document.getElementById('meals-price');
         const discountPriceElement = document.getElementById('discount-price');
@@ -488,7 +487,6 @@
         const totalPriceElement = document.getElementById('total-price');
         const finalPriceInput = document.getElementById('final_price');
         
-        // Bazowa cena diety
         const basePrice = parseFloat('{{ $dietPlan->price_per_day }}');
         
         function calculatePrice() {
@@ -504,8 +502,7 @@
                 }
             });
             
-            // Obliczenie rabatu (możesz to dostosować według swojej logiki)
-            // Przykład: 10% rabatu dla 5+ posiłków, 15% dla 10+ posiłków
+     
             let discountPercentage = 0;
             if (selectedCount >= 5 && selectedCount < 10) {
                 discountPercentage = 10;
@@ -515,23 +512,18 @@
             
             const discount = totalMealsPrice * (discountPercentage / 100);
             
-            // Obliczenie finalnej ceny
             const finalPrice = basePrice + totalMealsPrice - discount;
             
-            // Aktualizacja elementów UI
             mealsPriceElement.textContent = totalMealsPrice.toFixed(2) + ' zł';
             discountPriceElement.textContent = discount.toFixed(2) + ' zł';
             mealsCountElement.textContent = selectedCount;
             totalPriceElement.textContent = 'Cena końcowa: ' + finalPrice.toFixed(2) + ' zł / dzień';
             
-            // Aktualizacja ukrytego pola z ceną
             finalPriceInput.value = finalPrice.toFixed(2);
         }
         
-        // Oblicz cenę na starcie
         calculatePrice();
         
-        // Nasłuchuj zmian w checkboxach
         checkboxes.forEach(checkbox => {
             checkbox.addEventListener('change', calculatePrice);
         });

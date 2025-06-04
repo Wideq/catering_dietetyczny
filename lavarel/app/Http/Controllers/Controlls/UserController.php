@@ -15,26 +15,18 @@ use Illuminate\Notifications\Notifiable;
 class UserController extends Controller
 {
     use AuthorizesRequests;
-    /**
-     * Display a listing of users
-     */
+
     public function index()
     {
-        $users = User::paginate(10); // Added pagination
+        $users = User::paginate(10); 
         return view('users.index', compact('users'));
     }
 
-    /**
-     * Show registration form
-     */
     public function create()
     {
         return view('register');
     }
 
-    /**
-     * Store a new user
-     */
     public function store(Request $request)
     {
         try {
@@ -48,7 +40,7 @@ class UserController extends Controller
                 'name' => $validated['name'],
                 'email' => $validated['email'],
                 'password' => Hash::make($validated['password']),
-                'role' => 'user', // Add default role
+                'role' => 'user', 
             ]);
 
             Auth::login($user);
@@ -62,34 +54,24 @@ class UserController extends Controller
         }
     }
 
-    /**
-     * Show edit form for user
-     */
     public function edit($id)
     {
         $user = User::findOrFail($id);
-        $this->authorize('update', $user); // Add authorization check
+        $this->authorize('update', $user); 
         return view('users.edit', compact('user'));
     }
 
-    /**
-     * Update user details
-     */
     public function update(UserRequest $request, $id)
 {
     try {
         $user = User::findOrFail($id);
-        // Można usunąć authorize jeśli zarządzanie użytkownikami jest tylko dla adminów
-        // $this->authorize('update', $user);
-
-        // Zbierz dane podstawowe
+       
         $data = [
             'name' => $request->name,
             'email' => $request->email,
-            'role' => $request->role, // Dodane pole roli
+            'role' => $request->role, 
         ];
         
-        // Dodaj hasło tylko jeśli zostało podane
         if ($request->filled('password')) {
             $data['password'] = Hash::make($request->password);
         }
@@ -103,14 +85,11 @@ class UserController extends Controller
         return back()->withErrors(['error' => 'Wystąpił błąd podczas aktualizacji: ' . $e->getMessage()]);
     }
 }
-    /**
-     * Delete user
-     */
     public function destroy($id)
     {
         try {
             $user = User::findOrFail($id);
-            $this->authorize('delete', $user); // Add authorization check
+            $this->authorize('delete', $user); 
 
             if ($user->id === Auth::id()) {
                 return back()->withErrors(['error' => 'Nie możesz usunąć własnego konta.']);

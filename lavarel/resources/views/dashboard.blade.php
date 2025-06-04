@@ -66,7 +66,7 @@
     }
 
     .btn-diet {
-        background-color: #27ae60; /* zielony kolor dla odróżnienia przycisku diet */
+        background-color: #27ae60; 
     }
 
     .btn-diet:hover {
@@ -161,10 +161,10 @@ function initializeCharts() {
             datasets: [{
                 data: Object.values(orderStatusData),
                 backgroundColor: [
-                    'rgba(255, 99, 132, 0.7)',  // czerwony - nowe
-                    'rgba(54, 162, 235, 0.7)',  // niebieski - w realizacji
-                    'rgba(75, 192, 192, 0.7)',  // zielony - zakończone
-                    'rgba(255, 159, 64, 0.7)'   // pomarańczowy - anulowane
+                    'rgba(255, 99, 132, 0.7)',  
+                    'rgba(54, 162, 235, 0.7)',  
+                    'rgba(75, 192, 192, 0.7)',  
+                    'rgba(255, 159, 64, 0.7)'   
                 ],
                 borderColor: [
                     'rgba(255, 99, 132, 1)',
@@ -197,11 +197,9 @@ function initializeCharts() {
         }
     });
 
-    // Wykres najczęściej zamawianych dań
     const popularDishesChart = document.getElementById('popularDishesChart');
     const popularDishesData = JSON.parse(popularDishesChart.dataset.dishes);
     
-    // Przygotowanie kolorów dla słupków
     const generateColors = (count) => {
         const colors = [];
         for (let i = 0; i < count; i++) {

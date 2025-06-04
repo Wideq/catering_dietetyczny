@@ -15,34 +15,46 @@ use Illuminate\Support\Facades\Log;
 class CartController extends Controller
 {
     public function index()
-    {
-        $cartItems = session()->get('cart', []);
-        $total = 0;
-        
-        foreach($cartItems as $item) {
-            $total += $item['price'] * $item['quantity'];
+{
+    $cartItems = session()->get('cart', []);
+    $total = 0;
+    
+    $updated = false;
+    foreach($cartItems as $id => $item) {
+        if (!isset($item['type'])) {
+            $cartItems[$id]['type'] = 'menu'; 
+            $updated = true;
         }
-
-        return view('cart.index', compact('cartItems', 'total'));
+        $total += $item['price'] * $item['quantity'];
     }
+    
+    if ($updated) {
+        session()->put('cart', $cartItems);
+    }
+
+    return view('cart.index', compact('cartItems', 'total'));
+}
 
     public function add(Menu $menuItem, Request $request)
-    {
-        $cart = session()->get('cart', []);
-        
-        if(isset($cart[$menuItem->id])) {
-            $cart[$menuItem->id]['quantity']++;
-        } else {
-            $cart[$menuItem->id] = [
-                'name' => $menuItem->name,
-                'price' => $menuItem->price,
-                'quantity' => 1
-            ];
-        }
-
-        session()->put('cart', $cart);
-        return redirect()->back()->with('success', 'Produkt dodany do koszyka!');
+{
+    $cart = session()->get('cart', []);
+    
+    if(isset($cart[$menuItem->id])) {
+        $cart[$menuItem->id]['quantity']++;
+    } else {
+        $cart[$menuItem->id] = [
+            'id' => $menuItem->id, 
+            'name' => $menuItem->name,
+            'price' => $menuItem->price,
+            'quantity' => 1,
+            'type' => 'menu', 
+            'image' => $menuItem->image ? asset('storage/' . $menuItem->image) : null,
+        ];
     }
+
+    session()->put('cart', $cart);
+    return redirect()->back()->with('success', 'Produkt dodany do koszyka!');
+}
 
     public function remove($id)
     {
@@ -56,91 +68,181 @@ class CartController extends Controller
         return redirect()->back()->with('success', 'Produkt usunięty z koszyka!');
     }
 
-    public function checkout()
-    {
-        $cart = session()->get('cart', []);
+    public function checkout(Request $request)
+{
+    if (!session()->has('cart') || count(session('cart')) == 0) {
+        return redirect()->route('cart.index')->with('error', 'Twój koszyk jest pusty');
+    }
+
+    try {
+        DB::enableQueryLog();
         
-        if(empty($cart)) {
-            return redirect()->route('cart.index')->with('error', 'Twój koszyk jest pusty!');
-        }
-        
+        $cart = session()->get('cart');
         $total = 0;
         
-        foreach($cart as $item) {
-            $total += (float)$item['price'] * (int)$item['quantity'];
+        Log::info('Zawartość koszyka przed przetwarzaniem:', $cart);
+
+        foreach ($cart as $item) {
+            $total += $item['price'] * $item['quantity'];
         }
 
-        try {
-            // Start a database transaction
-            DB::beginTransaction();
-            
-            Log::info('Suma koszyka: ' . $total);
-            Log::info('Zawartość koszyka: ', $cart);
+        Log::info('Suma koszyka: ' . $total);
 
-            // Tworzenie transakcji
+        DB::beginTransaction();
+
+        try {
             $transaction = Transaction::create([
                 'user_id' => Auth::id(),
                 'amount' => $total,
-                'status' => 'completed',
+                'status' => 'completed', 
                 'description' => 'Zamówienie online',
-                'payment_method' => 'online'
+                'payment_method' => 'online' 
             ]);
 
-            // Wybierz pierwszy produkt jako główny dla zamówienia (dla zachowania kompatybilności)
-            $firstItemId = array_key_first($cart);
-            
-            // Tworzenie głównego zamówienia
             $order = Order::create([
                 'user_id' => Auth::id(),
-                'menu_id' => $firstItemId, 
+                'menu_id' => null, 
                 'quantity' => 1,
                 'status' => 'new',
                 'order_date' => now(),
                 'transaction_id' => $transaction->id,
-                'total_amount' => $total // Zapisz łączną kwotę zamówienia
+                'total_amount' => $total
             ]);
 
-            // Dodaj wszystkie produkty jako pozycje zamówienia
             $itemCount = 0;
-            $itemsTotal = 0; // Dodatkowa zmienna do weryfikacji sumy
 
-foreach($cart as $menuId => $item) {
+            foreach($cart as $id => $item) {
+    if (!isset($item['price']) || !isset($item['quantity'])) {
+        Log::warning('Niepełny element koszyka, pomijam: ' . json_encode($item));
+        continue;
+    }
+    
     $price = (float)$item['price'];
     $quantity = (int)$item['quantity'];
-    $itemsTotal += $price * $quantity;
     
-    OrderItem::create([
-        'order_id' => $order->id,
-        'menu_id' => $menuId,
-        'quantity' => $quantity,
-        'price' => $price
-    ]);
+    $itemType = isset($item['type']) ? $item['type'] : 'menu';
+    
+    if ($itemType === 'diet_plan') {
+        if (!isset($item['id']) || !isset($item['duration']) || !isset($item['start_date'])) {
+            Log::warning('Brak wymaganych danych dla diety: ' . json_encode($item));
+            continue;
+        }
+        
+        OrderItem::create([
+            'order_id' => $order->id,
+            'menu_id' => null,
+            'diet_plan_id' => $item['id'],
+            'quantity' => 1,
+            'price' => $price,
+            'item_type' => 'diet_plan',
+            'duration' => $item['duration'],
+            'start_date' => $item['start_date'],
+            'notes' => $item['notes'] ?? null
+        ]);
+        $itemCount++;
+    } else {
+        if (!isset($item['id'])) {
+            Log::warning('Brak ID menu dla elementu koszyka: ' . json_encode($item));
+            continue;
+        }
+        
+        OrderItem::create([
+            'order_id' => $order->id,
+            'menu_id' => $item['id'],
+            'diet_plan_id' => null,
+            'quantity' => $quantity,
+            'price' => $price,
+            'item_type' => 'menu'
+        ]);
+        $itemCount += $quantity;
+    }
 }
 
-            Log::info('Suma z pozycji: ' . $itemsTotal);
-            
-            // Upewnij się, że total_amount jest poprawnie zapisane
-            // Użyj abs() i małej tolerancji ze względu na potencjalne błędy zaokrąglenia
-            if (abs($itemsTotal - $total) > 0.01) {
-                Log::warning('Różnica w obliczeniach sumy zamówienia!');
-                // Aktualizuj sumę zamówienia
-                $order->update(['total_amount' => $itemsTotal]);
-            }
-            // Czyszczenie koszyka
             session()->forget('cart');
             
-            // Commit the transaction
             DB::commit();
 
             return redirect()->route('user.dashboard')
-                ->with('success', "Zamówienie zostało złożone pomyślnie! Dodano $itemCount produktów do zamówienia za kwotę " . number_format($total, 2) . " zł");
+                ->with('success', "Zamówienie zostało złożone pomyślnie! Zawiera $itemCount pozycji na łączną kwotę " . number_format($total, 2) . " zł");
                 
         } catch (\Exception $e) {
-            // Roll back the transaction if something goes wrong
             DB::rollBack();
-            
+            throw $e;
+        }
+    } catch (\Exception $e) {
+        Log::error('Exception during checkout: ' . $e->getMessage());
+        Log::error('Exception trace: ' . $e->getTraceAsString());
+        
+        if (DB::transactionLevel() > 0) {
+            DB::rollBack();
+        }
+        
+        Log::error('Last executed queries: ', DB::getQueryLog());
+        
+        if (config('app.debug')) {
             return redirect()->route('cart.index')
-                ->with('error', 'Wystąpił błąd podczas składania zamówienia: ' . $e->getMessage());
+                ->with('error', 'Błąd: ' . $e->getMessage());
+        } else {
+            return redirect()->route('cart.index')
+                ->with('error', 'Wystąpił błąd podczas przetwarzania zamówienia. Prosimy spróbować ponownie.');
         }
     }
+}
+    public function addAdvanced(Request $request)
+{
+    $validatedData = $request->validate([
+        'diet_plan_id' => 'required_if:item_type,diet_plan|exists:diet_plans,id',
+        'menu_id' => 'required_if:item_type,menu|exists:menus,id',
+        'item_type' => 'required|in:diet_plan,menu',
+        'duration' => 'required_if:item_type,diet_plan|integer|min:1',
+        'start_date' => 'required_if:item_type,diet_plan|date|after:today',
+        'notes' => 'nullable|string',
+        'price' => 'required|numeric|min:0',
+        'quantity' => 'required_if:item_type,menu|integer|min:1',
+    ]);
+
+    if (!session()->has('cart')) {
+        session()->put('cart', []);
+    }
+    
+    $cart = session()->get('cart');
+
+    if ($validatedData['item_type'] === 'diet_plan') {
+        $dietPlan = \App\Models\DietPlan::findOrFail($validatedData['diet_plan_id']);
+        
+        $cartItemId = 'diet_' . $dietPlan->id . '_' . time();
+        
+        $cart[$cartItemId] = [
+            'id' => $dietPlan->id,
+            'type' => 'diet_plan',
+            'name' => $dietPlan->name,
+            'price' => $validatedData['price'],
+            'quantity' => 1, 
+            'duration' => $validatedData['duration'],
+            'start_date' => $validatedData['start_date'],
+            'notes' => $validatedData['notes'] ?? '',
+            'image' => $dietPlan->image ? asset('storage/' . $dietPlan->image) : null,
+        ];
+    } else {
+        $menuId = $validatedData['menu_id'];
+        $menu = \App\Models\Menu::findOrFail($menuId);
+        
+        if (isset($cart[$menuId])) {
+            $cart[$menuId]['quantity'] += $validatedData['quantity'];
+        } else {
+            $cart[$menuId] = [
+                'id' => $menu->id,
+                'type' => 'menu',
+                'name' => $menu->name,
+                'price' => $menu->price,
+                'quantity' => $validatedData['quantity'],
+                'image' => $menu->image ? asset('storage/' . $menu->image) : null,
+            ];
+        }
+    }
+
+    session()->put('cart', $cart);
+
+    return redirect()->route('cart.index')->with('success', 'Produkt został dodany do koszyka');
+}
 }

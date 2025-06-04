@@ -70,9 +70,6 @@ class OrderController extends Controller
             ->with('warning', 'Zamówienie #' . $orderNumber . ' dla ' . $userName . ' zostało usunięte.');
     }
     
-    /**
-     * Zmiana statusu zamówienia
-     */
     public function updateStatus(Request $request, $id)
     {
         $request->validate([
@@ -88,10 +85,7 @@ class OrderController extends Controller
             ->with('info', 'Status zamówienia #' . $order->id . ' został zmieniony z "' . 
                 $oldStatus . '" na "' . $order->status . '"');
     }
-    
-    /**
-     * Anulowanie zamówienia
-     */
+
     public function cancel($id)
     {
         $order = Order::findOrFail($id);

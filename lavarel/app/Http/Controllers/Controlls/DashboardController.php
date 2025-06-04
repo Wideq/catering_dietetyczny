@@ -16,19 +16,16 @@ class DashboardController extends Controller
     {
         $user = Auth::user();
         
-        // Przekieruj użytkowników do user dashboard
         if ($user->role !== 'admin') {
             return redirect()->route('user.dashboard');
         }
         
-        // Przygotuj dane tylko dla administratora
         $statsData = [
             'users' => User::count(),
             'orders' => Order::count(),
             'menu' => Menu::count()
         ];
 
-        // Dane dla wykresu statusów zamówień
         $orderStatuses = [
             'Nowe' => Order::where('status', 'new')->count(),
             'W realizacji' => Order::where('status', 'in_progress')->count(),
@@ -36,16 +33,14 @@ class DashboardController extends Controller
             'Anulowane' => Order::where('status', 'cancelled')->count()
         ];
 
-        // Dane dla wykresu najpopularniejszych dań
         $popularDishes = Order::select('menus.name', DB::raw('count(*) as total'))
             ->join('menus', 'orders.menu_id', '=', 'menus.id')
             ->groupBy('menu_id', 'menus.name')
             ->orderBy('total', 'desc')
-            ->limit(5) // Ograniczamy do 5 najpopularniejszych
+            ->limit(5) 
             ->pluck('total', 'menus.name')
             ->toArray();
 
-        // Jeśli nie ma danych o zamówieniach, dodajemy przykładowe dane
         if (empty($popularDishes)) {
             $popularDishes = Menu::select('name')
                 ->limit(5)

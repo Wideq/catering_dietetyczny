@@ -1,6 +1,4 @@
 <?php
-// filepath: c:\Users\kosow\Desktop\catering_dietetyczny\lavarel\app\Models\DietPlan.php
-
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
@@ -20,35 +18,27 @@ class DietPlan extends Model
         'is_active'
     ];
 
-    /**
-     * Relacja z menu - dania wchodzące w skład diety
-     */
     public function menuItems(): BelongsToMany
-{
-    return $this->belongsToMany(Menu::class, 'menu_diet_plan')
-                ->withPivot('meal_type', 'day')
-                ->withTimestamps();
-}
-
-    /**
-     * Pobierz dania na konkretny dzień
-     */
-    public function getMenuForDay(int $day)
     {
-        return $this->menuItems()
-                    ->wherePivot('day', $day)
-                    ->orderByPivot('meal_type')
-                    ->get();
+        return $this->belongsToMany(Menu::class, 'menu_diet_plan')
+                    ->withTimestamps();
     }
 
-    /**
-     * Pobierz dania dla konkretnego posiłku (np. śniadanie) na wszystkie dni
-     */
-    public function getMenuForMealType(string $mealType)
+    public function getMenuByCategories()
     {
-        return $this->menuItems()
-                    ->wherePivot('meal_type', $mealType)
-                    ->orderByPivot('day')
-                    ->get();
+        $menus = $this->menuItems;
+        
+        return [
+            'śniadanie' => $menus->where('category', 'śniadanie'),
+            'drugie śniadanie' => $menus->where('category', 'drugie śniadanie'),
+            'obiad' => $menus->where('category', 'obiad'),
+            'podwieczorek' => $menus->where('category', 'podwieczorek'),
+            'kolacja' => $menus->where('category', 'kolacja'),
+        ];
+    }
+    
+    public function getMenuByCategory(string $category)
+    {
+        return $this->menuItems()->where('category', $category)->get();
     }
 }

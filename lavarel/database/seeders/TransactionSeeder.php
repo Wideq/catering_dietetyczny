@@ -14,16 +14,13 @@ class TransactionSeeder extends Seeder
     {
         $faker = Faker::create();
         
-        // Get all user IDs for reference
         $userIds = User::pluck('id')->toArray();
         
-        // Get all orders that don't have transactions yet
         $orders = Order::whereNull('transaction_id')->get();
         
         foreach ($orders as $order) {
-            // Create transaction with required user_id
             $transaction = Transaction::create([
-                'user_id' => $order->user_id ?? $faker->randomElement($userIds), // Use order's user_id or random user
+                'user_id' => $order->user_id ?? $faker->randomElement($userIds), 
                 'order_id' => $order->id,
                 'amount' => $faker->randomFloat(2, 20, 200),
                 'description' => $faker->sentence(),
@@ -32,11 +29,9 @@ class TransactionSeeder extends Seeder
                 'payment_date' => $faker->dateTimeBetween('-1 month', 'now'),
             ]);
             
-            // Update the order with the transaction ID
             $order->update(['transaction_id' => $transaction->id]);
         }
         
-        // Create some standalone transactions not linked to specific orders
         for ($i = 0; $i < 10; $i++) {
             Transaction::create([
                 'user_id' => $faker->randomElement($userIds),

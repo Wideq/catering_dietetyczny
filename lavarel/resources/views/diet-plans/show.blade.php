@@ -63,37 +63,6 @@
         transform: translateX(-50%);
     }
     
-    .day-selector {
-        display: flex;
-        justify-content: center;
-        margin-bottom: 30px;
-        flex-wrap: wrap;
-        gap: 10px;
-    }
-    
-    .day-btn {
-        padding: 10px 20px;
-        background-color: white;
-        border: 1px solid #ddd;
-        border-radius: 30px;
-        cursor: pointer;
-        transition: all 0.3s;
-    }
-    
-    .day-btn.active {
-        background-color: var(--accent);
-        color: white;
-        border-color: var(--accent);
-        transform: translateY(-3px);
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-    }
-    
-    .day-btn:hover:not(.active) {
-        background-color: #f5f5f5;
-        transform: translateY(-2px);
-        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
-    }
-    
     .meal-type-section {
         margin-bottom: 40px;
     }
@@ -324,15 +293,6 @@
         font-size: 0.9rem;
     }
     
-    .day-content {
-        display: none;
-    }
-    
-    .day-content.active {
-        display: block;
-        animation: fadeIn 0.5s ease forwards;
-    }
-    
     .no-meals-info {
         text-align: center;
         padding: 30px;
@@ -359,6 +319,37 @@
         .diet-title {
             font-size: 2.5rem;
         }
+    }
+    
+    .price-calculation {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 20px;
+    }
+    
+    .price-item {
+        display: flex;
+        justify-content: space-between;
+        margin-bottom: 10px;
+        padding-bottom: 10px;
+        border-bottom: 1px solid #eee;
+    }
+    
+    .price-item:last-child {
+        margin-bottom: 0;
+        padding-bottom: 0;
+        border-bottom: none;
+        font-weight: bold;
+    }
+    
+    .price-label {
+        color: var(--gray-medium);
+    }
+    
+    .price-value {
+        font-weight: 600;
+        color: var(--primary-color);
     }
 </style>
 @endpush
@@ -405,189 +396,143 @@
 
     <h2 class="section-title">Menu diety</h2>
     
-    <div class="day-selector">
-        @for ($day = 1; $day <= 7; $day++)
-            <button class="day-btn {{ $day === 1 ? 'active' : '' }}" data-day="{{ $day }}">
-                Dzień {{ $day }}
-            </button>
-        @endfor
-    </div>
+    @php
+        // Pobierz wszystkie posiłki w diecie
+        $allMenuItems = $dietPlan->menuItems;
+        
+        // Lista kategorii posiłków
+        $categories = ['śniadanie', 'drugie śniadanie', 'obiad', 'podwieczorek', 'kolacja'];
+    @endphp
     
-    @for ($day = 1; $day <= 7; $day++)
-        <div id="day-{{ $day }}" class="day-content {{ $day === 1 ? 'active' : '' }}">
+    @if($allMenuItems->count() > 0)
+        @foreach($categories as $category)
             @php
-                $dayMenu = $dietPlan->getMenuForDay($day);
-                $mealTypes = $dayMenu->pluck('pivot.meal_type')->unique();
+                $categoryMeals = $allMenuItems->where('category', $category);
             @endphp
             
-            @if($dayMenu->count() > 0)
-                @foreach($mealTypes as $mealType)
-                    <div class="meal-type-section">
-                        <h3 class="meal-type-title">
-                            @switch($mealType)
-                                @case('breakfast')
-                                    Śniadanie
-                                    @break
-                                @case('second_breakfast')
-                                    Drugie śniadanie
-                                    @break
-                                @case('lunch')
-                                    Obiad
-                                    @break
-                                @case('snack')
-                                    Podwieczorek
-                                    @break
-                                @case('dinner')
-                                    Kolacja
-                                    @break
-                                @default
-                                    {{ ucfirst($mealType) }}
-                            @endswitch
-                        </h3>
-                        
-                        <div class="meal-cards">
-                            @foreach($dayMenu->where('pivot.meal_type', $mealType) as $meal)
-                                <div class="meal-card">
-                                    <div class="meal-img">
-                                        @if($meal->image)
-                                            <img src="{{ asset('storage/' . $meal->image) }}" alt="{{ $meal->name }}">
-                                        @else
-                                            <i class="fas fa-utensils meal-icon"></i>
-                                        @endif
-                                        <span class="meal-badge">
-                                            @switch($mealType)
-                                                @case('breakfast')
-                                                    Śniadanie
-                                                    @break
-                                                @case('second_breakfast')
-                                                    Drugie śniadanie
-                                                    @break
-                                                @case('lunch')
-                                                    Obiad
-                                                    @break
-                                                @case('snack')
-                                                    Podwieczorek
-                                                    @break
-                                                @case('dinner')
-                                                    Kolacja
-                                                    @break
-                                                @default
-                                                    {{ ucfirst($mealType) }}
-                                            @endswitch
-                                        </span>
-                                    </div>
-                                    <div class="meal-content">
-                                        <h4 class="meal-title">{{ $meal->name }}</h4>
-                                        <p class="meal-description">{{ Str::limit($meal->description, 120) }}</p>
-                                        <div class="meal-macros">
-                                            <div class="macro-item">
-                                                <span class="macro-value">{{ $meal->calories ?? 0 }}</span>
-                                                <span class="macro-label">kcal</span>
-                                            </div>
-                                            <div class="macro-item">
-                                                <span class="macro-value">{{ $meal->protein ?? 0 }}</span>
-                                                <span class="macro-label">białko</span>
-                                            </div>
-                                            <div class="macro-item">
-                                                <span class="macro-value">{{ $meal->carbs ?? 0 }}</span>
-                                                <span class="macro-label">węgl.</span>
-                                            </div>
-                                            <div class="macro-item">
-                                                <span class="macro-value">{{ $meal->fat ?? 0 }}</span>
-                                                <span class="macro-label">tłuszcze</span>
-                                            </div>
+            @if($categoryMeals->count() > 0)
+                <div class="meal-type-section">
+                    <h3 class="meal-type-title">
+                        {{ ucfirst($category) }}
+                    </h3>
+                    
+                    <div class="meal-cards">
+                        @foreach($categoryMeals as $meal)
+                            <div class="meal-card">
+                                <div class="meal-img">
+                                    @if($meal->image)
+                                        <img src="{{ asset('storage/' . $meal->image) }}" alt="{{ $meal->name }}">
+                                    @else
+                                        <i class="fas fa-utensils meal-icon"></i>
+                                    @endif
+                                    <span class="meal-badge">
+                                        {{ ucfirst($category) }}
+                                    </span>
+                                </div>
+                                <div class="meal-content">
+                                    <h4 class="meal-title">{{ $meal->name }}</h4>
+                                    <p class="meal-description">{{ Str::limit($meal->description, 120) }}</p>
+                                    <div class="meal-macros">
+                                        <div class="macro-item">
+                                            <span class="macro-value">{{ $meal->calories ?? 0 }}</span>
+                                            <span class="macro-label">kcal</span>
+                                        </div>
+                                        <div class="macro-item">
+                                            <span class="macro-value">{{ $meal->protein ?? 0 }}</span>
+                                            <span class="macro-label">białko</span>
+                                        </div>
+                                        <div class="macro-item">
+                                            <span class="macro-value">{{ $meal->carbs ?? 0 }}</span>
+                                            <span class="macro-label">węgl.</span>
+                                        </div>
+                                        <div class="macro-item">
+                                            <span class="macro-value">{{ $meal->fat ?? 0 }}</span>
+                                            <span class="macro-label">tłuszcze</span>
                                         </div>
                                     </div>
                                 </div>
-                            @endforeach
-                        </div>
+                            </div>
+                        @endforeach
                     </div>
-                @endforeach
-            @else
-                <div class="no-meals-info">
-                    <i class="fas fa-info-circle"></i> Menu na dzień {{ $day }} nie zostało jeszcze zaplanowane.
                 </div>
             @endif
+        @endforeach
+        
+        @if($allMenuItems->whereIn('category', $categories)->count() == 0)
+            <div class="no-meals-info">
+                <i class="fas fa-info-circle"></i> Menu dla tej diety nie zawiera jeszcze żadnych posiłków.
+            </div>
+        @endif
+    @else
+        <div class="no-meals-info">
+            <i class="fas fa-info-circle"></i> Menu dla tej diety nie zostało jeszcze zaplanowane.
         </div>
-    @endfor
+    @endif
     
-    <div class="order-form">
-        <h3 class="form-title">Zamów dietę</h3>
-        <form action="{{ route('orders.store') }}" method="POST">
-            @csrf
-            <input type="hidden" name="diet_plan_id" value="{{ $dietPlan->id }}">
-            
-            <div class="form-group">
-                <label for="duration" class="form-label">Liczba dni</label>
-                <select id="duration" name="duration" class="form-control" required>
-                    <option value="5">5 dni</option>
-                    <option value="7">7 dni</option>
-                    <option value="14">14 dni</option>
-                    <option value="28">28 dni</option>
-                </select>
+    <<div class="order-form">
+    <h3 class="form-title">Zamów dietę</h3>
+    <form action="{{ route('cart.addAdvanced') }}" method="POST"> 
+        @csrf
+        <input type="hidden" name="diet_plan_id" value="{{ $dietPlan->id }}">
+        <input type="hidden" name="item_type" value="diet_plan">
+        
+        <div class="form-group">
+            <label for="duration" class="form-label">Liczba dni</label>
+            <select id="duration" name="duration" class="form-control" required>
+                <option value="5">5 dni</option>
+                <option value="7">7 dni</option>
+                <option value="14">14 dni</option>
+                <option value="28">28 dni</option>
+            </select>
+        </div>
+        
+        <div class="form-group">
+            <label for="start_date" class="form-label">Data rozpoczęcia</label>
+            <input type="date" id="start_date" name="start_date" class="form-control" required min="{{ date('Y-m-d', strtotime('+1 day')) }}">
+        </div>
+        
+        <div class="form-group">
+            <label for="notes" class="form-label">Dodatkowe uwagi (opcjonalnie)</label>
+            <textarea id="notes" name="notes" class="form-control" rows="3"></textarea>
+        </div>
+        
+        <input type="hidden" id="price-per-day" value="{{ $dietPlan->price_per_day }}">
+        <input type="hidden" name="price" value="{{ $dietPlan->price_per_day }}">
+        
+        <div id="price-summary" class="price-calculation">
+            <div class="price-item">
+                <div class="price-label">Cena za dzień</div>
+                <div class="price-value">{{ number_format($dietPlan->price_per_day, 2) }} zł</div>
             </div>
-            
-            <div class="form-group">
-                <label for="start_date" class="form-label">Data rozpoczęcia</label>
-                <input type="date" id="start_date" name="start_date" class="form-control" required min="{{ date('Y-m-d', strtotime('+1 day')) }}">
+            <div class="price-item">
+                <div class="price-label">Liczba dni</div>
+                <div id="days-value" class="price-value">5</div>
             </div>
-            
-            <div class="form-group">
-                <label for="notes" class="form-label">Dodatkowe uwagi (opcjonalnie)</label>
-                <textarea id="notes" name="notes" class="form-control" rows="3"></textarea>
+            <div class="price-item">
+                <div class="price-label">Łączna cena</div>
+                <div id="total-price" class="price-value">{{ number_format($dietPlan->price_per_day * 5, 2) }} zł</div>
             </div>
-            
-            <div id="price-summary" class="price-calculation">
-                <div class="price-item">
-                    <div class="price-label">Cena za dzień</div>
-                    <div class="price-value">{{ number_format($dietPlan->price_per_day, 2) }} zł</div>
-                </div>
-                <div class="price-item">
-                    <div class="price-label">Liczba dni</div>
-                    <div id="days-value" class="price-value">5</div>
-                </div>
-                <div class="price-item">
-                    <div class="price-label">Łączna cena</div>
-                    <div id="total-price" class="price-value">{{ number_format($dietPlan->price_per_day * 5, 2) }} zł</div>
-                </div>
-            </div>
-            
-            @auth
-                <button type="submit" class="btn-order">Zamów teraz</button>
-            @else
-                <a href="{{ route('login') }}" class="btn-order">Zaloguj się, aby zamówić</a>
-            @endauth
-        </form>
-    </div>
+        </div>
+        
+        @auth
+            <button type="submit" class="btn-order">Dodaj do koszyka</button> 
+        @else
+            <a href="{{ route('login') }}" class="btn-order">Zaloguj się, aby zamówić</a>
+        @endauth
+    </form>
+</div>
 </div>
 @endsection
 
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
-        // Obsługa przełączania dni
-        const dayButtons = document.querySelectorAll('.day-btn');
-        const dayContents = document.querySelectorAll('.day-content');
-        
-        dayButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                const day = this.getAttribute('data-day');
-                
-                // Aktualizacja aktywnych przycisków
-                dayButtons.forEach(btn => btn.classList.remove('active'));
-                this.classList.add('active');
-                
-                // Aktualizacja aktywnej zawartości
-                dayContents.forEach(content => content.classList.remove('active'));
-                document.getElementById(`day-${day}`).classList.add('active');
-            });
-        });
-        
-        // Obsługa kalkulacji ceny
         const durationSelect = document.getElementById('duration');
         const daysValue = document.getElementById('days-value');
         const totalPrice = document.getElementById('total-price');
-        const pricePerDay = {{ json_encode($dietPlan->price_per_day) }};
+        const priceInput = document.querySelector('input[name="price"]');
+        
+        const pricePerDay = parseFloat(document.getElementById('price-per-day').value);
         
         durationSelect.addEventListener('change', function() {
             const days = parseInt(this.value);
@@ -595,9 +540,13 @@
             
             daysValue.textContent = days;
             totalPrice.textContent = total.toFixed(2) + ' zł';
+            
+            priceInput.value = total.toFixed(2);
         });
         
-        // Ustawienie minimalnej daty na jutro
+        const initialDays = parseInt(durationSelect.value);
+        priceInput.value = (initialDays * pricePerDay).toFixed(2);
+        
         const today = new Date();
         const tomorrow = new Date(today);
         tomorrow.setDate(tomorrow.getDate() + 1);

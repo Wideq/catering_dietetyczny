@@ -16,20 +16,12 @@ class Menu extends Model
         'description',
         'price',
         'image',
-        'category', // Add this line
-        'calories',
-        'protein',
-        'carbs',
-        'fat'
+        'category'
     ];
 
-    /**
-     * Relacja z planami diet
-     */
     public function dietPlans(): BelongsToMany
-    {
-        return $this->belongsToMany(DietPlan::class, 'menu_diet_plan')
-                    ->withPivot('meal_type', 'day')
-                    ->withTimestamps();
-    }
+{
+    return $this->belongsToMany(DietPlan::class, 'menu_diet_plan')
+                ->withTimestamps();
+}
 }

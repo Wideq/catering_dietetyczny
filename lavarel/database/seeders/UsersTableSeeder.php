@@ -39,7 +39,6 @@ class UsersTableSeeder extends Seeder
             ]
         ];
         
-        // Create each specific user if they don't already exist
         foreach ($specificUsers as $userData) {
             User::firstOrCreate(
                 ['email' => $userData['email']],
@@ -53,8 +52,6 @@ class UsersTableSeeder extends Seeder
             );
         }
         
-        // Create additional random users with the factory
-        // This will use the faker generator for random names and emails
         User::factory()->count(20)->create();
     }
 }
