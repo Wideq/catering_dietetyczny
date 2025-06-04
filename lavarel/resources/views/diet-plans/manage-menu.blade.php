@@ -1,12 +1,6 @@
 @extends('layout')
 
 @section('title', 'Zarządzanie posiłkami diety - PureMeal')
-@if(isset($menuCount) && isset($categories))
-    <div class="alert alert-info">
-        <p>Znaleziono {{$menuCount}} posiłków w bazie danych.</p>
-        <p>Kategorie: {{ implode(', ', array_filter($categories)) ?: 'Brak kategorii' }}</p>
-    </div>
-@endif
 @push('styles')
 <style>
     .menu-container {
