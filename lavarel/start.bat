@@ -10,3 +10,4 @@ php artisan migrate --seed
 
 echo Uruchamianie lokalnego serwera...
 php artisan serve
+php artisan storage:link

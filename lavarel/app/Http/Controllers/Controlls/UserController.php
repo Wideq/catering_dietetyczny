@@ -103,4 +103,47 @@ class UserController extends Controller
             return back()->withErrors(['error' => 'Wystąpił błąd podczas usuwania użytkownika.']);
         }
     }
+    public function createByAdmin()
+{
+    $this->authorize('create', User::class);
+    return view('users.create');
+}
+
+public function storeByAdmin(Request $request)
+{
+    $this->authorize('create', User::class);
+    
+    $validated = $request->validate([
+        'name' => 'required|string|max:255',
+        'email' => 'required|string|email|max:255|unique:users',
+        'password' => 'required|string|min:8|confirmed',
+        'role' => 'required|in:user,admin',
+        'avatar' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
+    ]);
+
+    try {
+        $userData = [
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'password' => Hash::make($validated['password']),
+            'role' => $validated['role'],
+        ];
+        
+        if ($request->hasFile('avatar')) {
+            $avatar = $request->file('avatar');
+            $filename = time() . '.' . $avatar->getClientOriginalExtension();
+            $path = $avatar->storeAs('avatars', $filename, 'public');
+            $userData['avatar'] = $path;
+        }
+        
+        $user = User::create($userData);
+        
+        return redirect()->route('users.index')
+                       ->with('success', 'Użytkownik został pomyślnie utworzony.');
+    } catch (\Exception $e) {
+        Log::error('Admin user creation failed: ' . $e->getMessage());
+        return back()->withErrors(['error' => 'Wystąpił błąd podczas tworzenia użytkownika.'])
+                    ->withInput($request->except('password'));
+    }
+}
 }

@@ -195,3 +195,12 @@ Route::middleware('auth')->group(function () {
     Route::delete('/cart/remove/{cartItem}', [CartController::class, 'remove'])->name('cart.remove');
     Route::post('/cart/checkout', [CartController::class, 'checkout'])->name('cart.checkout');
 });
+
+Route::middleware(['auth'])->group(function () {
+    Route::get('/users/create', [UserController::class, 'createByAdmin'])->name('users.create-admin');
+    Route::post('/users/store', [UserController::class, 'storeByAdmin'])->name('users.store-admin');
+});
+Route::middleware('auth')->group(function () {
+    Route::get('/user/dashboard', [UserDashboardController::class, 'index'])->name('user.dashboard');
+    Route::put('/user/profile/update', [UserDashboardController::class, 'updateProfile'])->name('user.profile.update');
+});

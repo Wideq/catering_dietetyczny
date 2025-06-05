@@ -24,13 +24,8 @@
         border-radius: 16px;
         padding: 2.5rem;
         margin-bottom: 2rem;
-        box-shadow: var(--shadow-md);
-        transition: transform 0.2s, box-shadow 0.2s;
-    }
-
-    .profile-section:hover, .orders-section:hover {
-        transform: translateY(-2px);
         box-shadow: var(--shadow-lg);
+        border: 1px solid var(--border-color);
     }
 
     .section-title {
@@ -39,18 +34,18 @@
         color: var(--primary-color);
         margin-bottom: 2rem;
         padding-bottom: 0.75rem;
-        border-bottom: 2px solid var(--accent-color);
+        border-bottom: 3px solid var(--accent-color);
     }
 
     .form-group {
-        margin-bottom: 1.75rem;
+        margin-bottom: 1.5rem;
     }
 
     .form-group label {
         display: block;
-        margin-bottom: 0.75rem;
         font-weight: 600;
         color: var(--primary-color);
+        margin-bottom: 0.5rem;
         font-size: 0.95rem;
     }
 
@@ -58,120 +53,207 @@
         width: 100%;
         padding: 0.875rem 1rem;
         border: 2px solid var(--border-color);
-        border-radius: 10px;
+        border-radius: 8px;
         font-size: 1rem;
-        transition: border-color 0.2s, box-shadow 0.2s;
+        transition: all 0.3s ease;
+        background-color: #fafafa;
     }
 
     .form-control:focus {
         outline: none;
         border-color: var(--accent-color);
+        background-color: white;
         box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
     }
 
-    .btn-submit {
-        background-color: var(--accent-color);
+    /* Avatar section */
+    .avatar-section {
+        display: flex;
+        align-items: center;
+        gap: 1.5rem;
+        margin-bottom: 2rem;
+        padding: 1.5rem;
+        background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+        border-radius: 12px;
+        border: 1px solid var(--border-color);
+    }
+
+    .current-avatar {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        object-fit: cover;
+        border: 4px solid white;
+        box-shadow: var(--shadow-md);
+    }
+
+    .avatar-placeholder {
+        width: 100px;
+        height: 100px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #64748b;
+        font-size: 2.5rem;
+        border: 4px solid white;
+        box-shadow: var(--shadow-md);
+    }
+
+    .avatar-info {
+        flex: 1;
+    }
+
+    .avatar-info h3 {
+        margin: 0 0 0.5rem 0;
+        color: var(--primary-color);
+        font-size: 1.2rem;
+    }
+
+    .avatar-info p {
+        margin: 0;
+        color: #64748b;
+        font-size: 0.9rem;
+    }
+
+    .file-input-wrapper {
+        position: relative;
+        display: inline-block;
+        margin-top: 0.75rem;
+    }
+
+    .file-input-wrapper input[type=file] {
+        position: absolute;
+        opacity: 0;
+        width: 100%;
+        height: 100%;
+        cursor: pointer;
+    }
+
+    .file-input-label {
+        display: inline-block;
+        padding: 0.5rem 1rem;
+        background: var(--accent-color);
         color: white;
-        padding: 1rem 2.5rem;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 0.875rem;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+
+    .file-input-label:hover {
+        background: #2563eb;
+        transform: translateY(-1px);
+    }
+
+    .btn-submit {
+        background: linear-gradient(135deg, var(--accent-color) 0%, #2563eb 100%);
+        color: white;
         border: none;
-        border-radius: 10px;
+        padding: 0.875rem 2rem;
+        border-radius: 8px;
         font-weight: 600;
         font-size: 1rem;
         cursor: pointer;
-        transition: all 0.2s;
+        transition: all 0.3s ease;
         box-shadow: var(--shadow-sm);
     }
 
     .btn-submit:hover {
-        background-color: #2563eb;
-        transform: translateY(-1px);
+        transform: translateY(-2px);
         box-shadow: var(--shadow-md);
+        background: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
     }
 
     .orders-table {
         width: 100%;
-        border-collapse: separate;
-        border-spacing: 0;
+        border-collapse: collapse;
         margin-top: 1rem;
-    }
-
-    .orders-table th,
-    .orders-table td {
-        padding: 1.25rem;
-        text-align: left;
-        border-bottom: 1px solid var(--border-color);
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: var(--shadow-sm);
     }
 
     .orders-table th {
+        background: linear-gradient(135deg, var(--primary-color) 0%, #374151 100%);
+        color: white;
+        padding: 1rem;
+        text-align: left;
         font-weight: 600;
-        background-color: #f8fafc;
-        color: var(--primary-color);
+        font-size: 0.9rem;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .orders-table td {
+        padding: 1rem;
+        border-bottom: 1px solid var(--border-color);
     }
 
     .orders-table tr:hover {
         background-color: #f8fafc;
     }
-    
-    .order-items {
-        margin: 0;
-        padding: 0;
-        list-style-type: none;
-    }
-    
-    .order-items li {
-        padding: 0.5rem 0;
-        border-bottom: 1px dashed var(--border-color);
-    }
-    
-    .order-items li:last-child {
-        border-bottom: none;
-    }
 
     .status-badge {
-        padding: 0.5rem 1rem;
-        border-radius: 9999px;
-        font-size: 0.875rem;
-        font-weight: 600;
         display: inline-block;
-        text-align: center;
-        min-width: 120px;
+        padding: 0.25rem 0.75rem;
+        border-radius: 20px;
+        font-size: 0.8rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
     }
 
-    .status-new { 
-        background-color: #fef3c7; 
+    .status-new {
+        background-color: #dbeafe;
+        color: #1e40af;
+    }
+
+    .status-in_progress {
+        background-color: #fef3c7;
         color: #92400e;
-        border: 1px solid #fcd34d;
     }
 
-    .status-in-progress { 
-        background-color: #e0f2fe; 
-        color: #075985;
-        border: 1px solid #7dd3fc;
+    .status-completed {
+        background-color: #d1fae5;
+        color: #065f46;
     }
 
-    .status-completed { 
-        background-color: #dcfce7; 
-        color: #166534;
-        border: 1px solid #86efac;
+    .status-cancelled {
+        background-color: #fee2e2;
+        color: #991b1b;
+    }
+
+    .order-items {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .order-items li {
+        padding: 0.25rem 0;
+        font-size: 0.9rem;
+        color: #64748b;
     }
 
     .alert {
         padding: 1rem 1.5rem;
-        border-radius: 10px;
-        margin-bottom: 2rem;
-        display: flex;
-        align-items: center;
-        gap: 1rem;
+        border-radius: 8px;
+        margin-bottom: 1.5rem;
+        border: none;
+        font-weight: 500;
+        animation: slideIn 0.3s ease-out;
     }
 
     .alert-success {
-        background-color: #dcfce7;
-        color: #166534;
-        border: 1px solid #86efac;
-        animation: fadeInDown 0.5s ease-in-out;
+        background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+        color: #065f46;
     }
-    
-    @keyframes fadeInDown {
+
+    @keyframes slideIn {
         from {
             opacity: 0;
             transform: translateY(-20px);
@@ -192,6 +274,11 @@
             padding: 1.5rem;
         }
 
+        .avatar-section {
+            flex-direction: column;
+            text-align: center;
+        }
+
         .orders-table {
             display: block;
             overflow-x: auto;
@@ -200,7 +287,6 @@
     }
 </style>
 @endpush
-
 
 @section('content')
 <div class="user-dashboard">
@@ -211,11 +297,48 @@
         </div>
     @endif
 
+    @if($errors->any())
+        <div class="alert alert-danger">
+            <ul class="mb-0">
+                @foreach($errors->all() as $error)
+                    <li>{{ $error }}</li>
+                @endforeach
+            </ul>
+        </div>
+    @endif
+
     <div class="profile-section">
         <h2 class="section-title">Twój profil</h2>
-        <form action="{{ route('user.profile.update') }}" method="POST">
+        
+        <form action="{{ route('user.profile.update') }}" method="POST" enctype="multipart/form-data">
             @csrf
             @method('PUT')
+            
+            <!-- Avatar section -->
+            <div class="avatar-section">
+                <div class="avatar-container">
+                    @if(Auth::user()->avatar)
+                        <img src="{{ asset('storage/' . Auth::user()->avatar) }}" alt="Avatar" class="current-avatar">
+                    @else
+                        <div class="avatar-placeholder">
+                            <i class="fas fa-user"></i>
+                        </div>
+                    @endif
+                </div>
+                
+                <div class="avatar-info">
+                    <h3>Zdjęcie profilowe</h3>
+                    <p>Dodaj swoje zdjęcie profilowe. Akceptowane formaty: JPG, PNG, maksymalny rozmiar: 2MB</p>
+                    
+                    <div class="file-input-wrapper">
+                        <input type="file" name="avatar" id="avatar" accept="image/jpeg,image/png,image/jpg">
+                        <label for="avatar" class="file-input-label">
+                            <i class="fas fa-camera me-1"></i>
+                            {{ Auth::user()->avatar ? 'Zmień zdjęcie' : 'Dodaj zdjęcie' }}
+                        </label>
+                    </div>
+                </div>
+            </div>
             
             <div class="form-group">
                 <label for="name">Imię i nazwisko</label>
@@ -228,7 +351,7 @@
             </div>
 
             <div class="form-group">
-                <label for="current_password">Aktualne hasło</label>
+                <label for="current_password">Aktualne hasło (wymagane do zmiany hasła)</label>
                 <input type="password" id="current_password" name="current_password" class="form-control">
             </div>
 
@@ -242,7 +365,9 @@
                 <input type="password" id="new_password_confirmation" name="new_password_confirmation" class="form-control">
             </div>
 
-            <button type="submit" class="btn-submit">Zapisz zmiany</button>
+            <button type="submit" class="btn-submit">
+                <i class="fas fa-save me-2"></i>Zapisz zmiany
+            </button>
         </form>
     </div>
 
@@ -325,16 +450,6 @@
             </table>
         @else
             <p>Nie masz jeszcze żadnych zamówień.</p>
-            
-            <div style="margin-top: 20px; padding: 15px; border: 1px solid #ddd; background: #f9f9f9;">
-                <p>ID użytkownika: {{ $user->id }}</p>
-                
-                @if(isset($orders))
-                    <p>Kolekcja orders istnieje, ale jest pusta.</p>
-                @else
-                    <p>Kolekcja orders nie została przekazana do widoku.</p>
-                @endif
-            </div>
         @endif
     </div>
 </div>
@@ -342,6 +457,22 @@
 @push('scripts')
 <script>
     document.addEventListener('DOMContentLoaded', function() {
+        // Preview avatara
+        const avatarInput = document.getElementById('avatar');
+        const avatarContainer = document.querySelector('.avatar-container');
+        
+        avatarInput.addEventListener('change', function(e) {
+            const file = e.target.files[0];
+            if (file) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    avatarContainer.innerHTML = `<img src="${e.target.result}" alt="Podgląd" class="current-avatar">`;
+                }
+                reader.readAsDataURL(file);
+            }
+        });
+
+        // Auto-hide success messages
         const successAlert = document.querySelector('.alert-success');
         if (successAlert) {
             setTimeout(function() {

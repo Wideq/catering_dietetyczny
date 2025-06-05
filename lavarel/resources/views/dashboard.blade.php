@@ -10,7 +10,7 @@
         box-shadow: 0 15px 30px rgba(0, 0, 0, 0.2);
         padding: 40px;
         width: 100%;
-        max-width: 900px;
+        max-width: 1100px;
         margin: 50px auto;
         transition: all 0.3s ease;
     }
@@ -73,12 +73,85 @@
         background-color: #219653;
     }
 
+    .stats-grid {
+        display: grid;
+        grid-template-columns: repeat(4, 1fr);
+        gap: 15px;
+        margin: 30px 0;
+    }
+
+    .stat-card {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        text-align: center;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+        transition: transform 0.3s ease;
+    }
+
+    .stat-card:hover {
+        transform: translateY(-5px);
+    }
+
+    .stat-value {
+        font-size: 2rem;
+        font-weight: 700;
+        color: var(--primary-color);
+        margin-bottom: 5px;
+    }
+
+    .stat-label {
+        color: #666;
+        font-size: 0.9rem;
+    }
+
+    .filter-form {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        margin-top: 20px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .filter-form .form-row {
+        display: flex;
+        gap: 15px;
+        margin-bottom: 15px;
+    }
+
+    .filter-form .form-group {
+        flex: 1;
+    }
+
+    .filter-form label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: 600;
+    }
+
+    .filter-form select,
+    .filter-form input {
+        width: 100%;
+        padding: 10px;
+        border-radius: 5px;
+        border: 1px solid #ddd;
+    }
+
+    .filter-form button {
+        background-color: var(--primary-color);
+        color: white;
+        border: none;
+        padding: 10px 15px;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: 600;
+    }
+
     .charts-container {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 20px;
         margin-top: 30px;
-        padding: 20px;
     }
 
     .chart-box {
@@ -105,6 +178,20 @@
         left: 0;
         bottom: 0;
     }
+
+    @media (max-width: 768px) {
+        .stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+        }
+        
+        .charts-container {
+            grid-template-columns: 1fr;
+        }
+        
+        .filter-form .form-row {
+            flex-direction: column;
+        }
+    }
 </style>
 @endpush
 
@@ -121,11 +208,79 @@
             <a href="{{ route('orders.index') }}" class="btn-dashboard">Zarządzaj zamówieniami</a>
             <a href="{{ route('diet-plans.index') }}" class="btn-dashboard btn-diet">Zarządzaj dietami</a>
             <a href="{{ route('diet-plans.create') }}" class="btn-dashboard btn-diet">Dodaj nową dietę</a>
+            
+            <!-- Filtry dla wykresów -->
+            <div class="filter-form">
+                <h3>Filtry danych</h3>
+                <form method="GET" action="{{ route('dashboard') }}">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label for="start_date">Od daty</label>
+                            <input type="date" id="start_date" name="start_date" value="{{ $startDate->format('Y-m-d') }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="end_date">Do daty</label>
+                            <input type="date" id="end_date" name="end_date" value="{{ $endDate->format('Y-m-d') }}">
+                        </div>
+                        <div class="form-group">
+                            <label for="dish_type">Kategoria dań</label>
+                            <select id="dish_type" name="dish_type">
+                                <option value="">Wszystkie kategorie</option>
+                                @foreach($mealCategories as $category)
+                                    <option value="{{ $category }}" {{ $dishTypeFilter == $category ? 'selected' : '' }}>
+                                        {{ ucfirst($category) }}
+                                    </option>
+                                @endforeach
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>&nbsp;</label>
+                            <button type="submit">Zastosuj filtry</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+            
+            <!-- Karty ze statystykami -->
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value">{{ $adminStats['totalUsers'] }}</div>
+                    <div class="stat-label">Użytkownicy</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ $adminStats['totalOrders'] }}</div>
+                    <div class="stat-label">Zamówienia</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ number_format($adminStats['totalRevenue'], 2) }} zł</div>
+                    <div class="stat-label">Przychód</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ $adminStats['totalMenuItems'] }}</div>
+                    <div class="stat-label">Dania w menu</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ $adminStats['totalDietPlans'] }}</div>
+                    <div class="stat-label">Plany dietetyczne</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ $adminStats['transactionCount'] }}</div>
+                    <div class="stat-label">Transakcje</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ $adminStats['failedTransactions'] }}</div>
+                    <div class="stat-label">Nieudane transakcje</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value">{{ round(($adminStats['totalOrders'] > 0) ? ($adminStats['totalRevenue'] / $adminStats['totalOrders']) : 0, 2) }} zł</div>
+                    <div class="stat-label">Śr. wartość zamówienia</div>
+                </div>
+            </div>
 
             <div class="charts-container">
                 <div class="chart-box">
                     <h3 class="chart-title">Status zamówień</h3>
-                    <canvas id="ordersStatusChart" data-orders="{{ json_encode($orderStatuses) }}"></canvas>
+                    <canvas id="ordersStatusChart" data-orders="{{ json_encode($formattedOrderStatuses) }}"></canvas>
                 </div>
                 <div class="chart-box">
                     <h3 class="chart-title">Najczęściej zamawiane dania</h3>
