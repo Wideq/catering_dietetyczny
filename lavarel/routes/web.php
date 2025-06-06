@@ -76,7 +76,9 @@ Route::post('/register', [UserController::class, 'store'])
     ->name('register.store');
 
 // ==================== Zarządzanie użytkownikami ====================
-
+Route::get('/users/create', [UserController::class, 'createByAdmin'])->name('users.create-admin');
+Route::post('/users/store', [UserController::class, 'storeByAdmin'])->name('users.store-admin');
+    
 Route::middleware(['auth'])->group(function () {
     // Lista użytkowników
     Route::get('/users', function () {

@@ -105,12 +105,19 @@ class UserController extends Controller
     }
     public function createByAdmin()
 {
-    $this->authorize('create', User::class);
-    return view('users.create');
+    // Sprawdź czy użytkownik ma uprawnienia admina
+    if (Auth::user()->role !== 'admin') {
+        return redirect()->route('dashboard')->with('error', 'Brak uprawnień');
+    }
+    
+    return view('users.create-admin');
 }
 
 public function storeByAdmin(Request $request)
 {
+    if (Auth::user()->role !== 'admin') {
+        return redirect()->route('dashboard')->with('error', 'Brak uprawnień');
+    }
     $this->authorize('create', User::class);
     
     $validated = $request->validate([
