@@ -128,22 +128,104 @@
 
 @push('scripts')
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const checkoutButton = document.getElementById('checkout-button');
+document.addEventListener('DOMContentLoaded', function() {
+    const quantityInputs = document.querySelectorAll('.quantity.update-cart');
+    const checkoutButton = document.getElementById('checkout-button');
+    
+    quantityInputs.forEach(input => {
+        input.addEventListener('change', function() {
+            const value = parseInt(this.value);
+            const min = parseInt(this.min) || 1;
+            const max = parseInt(this.max) || 99;
+            
+            if (isNaN(value) || value < min) {
+                this.value = min;
+                showNotification('Minimalna ilość to ' + min, 'warning');
+            } else if (value > max) {
+                this.value = max;
+                showNotification('Maksymalna ilość to ' + max, 'warning');
+            }
+            
+            updateCartTotal();
+        });
         
-        if (checkoutButton) {
-            checkoutButton.addEventListener('click', function(e) {
-                e.preventDefault();
-                
-                this.innerHTML = '<span class="spinner-border spinner-border-sm me-2" role="status" aria-hidden="true"></span> Przetwarzanie...';
-                this.disabled = true;
-                
-                setTimeout(() => {
-                    this.closest('form').submit();
-                }, 800);
-            });
-        }
+        input.addEventListener('input', function() {
+            const value = parseInt(this.value);
+            if (isNaN(value) || value < 1) {
+                this.style.borderColor = '#dc3545';
+            } else {
+                this.style.borderColor = '#28a745';
+            }
+        });
     });
+    
+    if (checkoutButton) {
+        checkoutButton.addEventListener('click', function(e) {
+            let hasErrors = false;
+            
+            quantityInputs.forEach(input => {
+                const value = parseInt(input.value);
+                if (isNaN(value) || value < 1) {
+                    hasErrors = true;
+                    input.style.borderColor = '#dc3545';
+                }
+            });
+            
+            if (hasErrors) {
+                e.preventDefault();
+                showNotification('Sprawdź ilości produktów w koszyku', 'error');
+                return;
+            }
+            
+            if (quantityInputs.length === 0) {
+                e.preventDefault();
+                showNotification('Koszyk jest pusty', 'error');
+                return;
+            }
+            
+            this.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span> Przetwarzanie...';
+            this.disabled = true;
+            
+            setTimeout(() => {
+                this.closest('form').submit();
+            }, 800);
+        });
+    }
+    
+    function updateCartTotal() {
+        let total = 0;
+        quantityInputs.forEach(input => {
+            const row = input.closest('tr');
+            const price = parseFloat(row.querySelector('td:nth-child(3)').textContent.replace(' zł', '').replace(',', '.'));
+            const quantity = parseInt(input.value);
+            total += price * quantity;
+            
+            const subtotalCell = row.querySelector('td:nth-child(5)');
+            subtotalCell.textContent = (price * quantity).toFixed(2) + ' zł';
+        });
+        
+        const totalElement = document.querySelector('.card-body strong:last-child');
+        if (totalElement) {
+            totalElement.textContent = total.toFixed(2) + ' zł';
+        }
+    }
+    
+    function showNotification(message, type) {
+        const notification = document.createElement('div');
+        notification.className = `alert alert-${type === 'error' ? 'danger' : type} alert-dismissible fade show`;
+        notification.innerHTML = `
+            ${message}
+            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+        `;
+        
+        const container = document.querySelector('.container');
+        container.insertBefore(notification, container.firstChild);
+        
+        setTimeout(() => {
+            notification.remove();
+        }, 5000);
+    }
+});
 </script>
 @endpush
 @endsection

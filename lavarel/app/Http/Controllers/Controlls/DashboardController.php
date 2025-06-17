@@ -7,8 +7,8 @@ use App\Models\User;
 use App\Models\Order;
 use App\Models\Transaction;
 use App\Models\Menu;
-use App\Models\OrderItem;
 use App\Models\DietPlan;
+use App\Models\OrderItem;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
@@ -23,58 +23,50 @@ class DashboardController extends Controller
         if ($user->role !== 'admin') {
             return redirect()->route('user.dashboard');
         }
-        
-        // Obsługa filtrowania po datach
-        $startDate = $request->input('start_date') 
-            ? Carbon::parse($request->input('start_date')) 
-            : Carbon::now()->subMonth();
-        
-        $endDate = $request->input('end_date') 
-            ? Carbon::parse($request->input('end_date')) 
-            : Carbon::now();
-            
-        // Jeśli początkowa data jest późniejsza niż końcowa, zamieniamy je
-        if ($startDate->gt($endDate)) {
-            $temp = $startDate;
-            $startDate = $endDate;
-            $endDate = $temp;
-        }
-        
-        // Filtr typu dania
+
+        $dateRange = $request->input('date_range', '30');
         $dishTypeFilter = $request->input('dish_type');
         
-        // Podstawowe statystyki
+        $startDate = match($dateRange) {
+            '7' => Carbon::now()->subDays(7),
+            '14' => Carbon::now()->subDays(14), 
+            '30' => Carbon::now()->subDays(30),
+            '90' => Carbon::now()->subDays(90),
+            default => Carbon::now()->subDays(30),
+        };
+        
+        $endDate = Carbon::now();
+
         $totalUsers = User::count();
         $totalOrders = Order::whereBetween('created_at', [$startDate, $endDate])->count();
-        $totalRevenue = Order::whereBetween('created_at', [$startDate, $endDate])->sum('total_amount') ?? 0;
+        $totalRevenue = Transaction::where('status', 'completed')
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->sum('amount');
         $totalMenuItems = Menu::count();
         $totalDietPlans = DietPlan::count();
-        
-        // Statystyki zamówień według statusu
-        $orderStatusQuery = Order::whereBetween('created_at', [$startDate, $endDate])
-            ->selectRaw('status, count(*) as count')
-            ->groupBy('status');
-        
-        $orderStatuses = $orderStatusQuery->pluck('count', 'status')->toArray();
-        
-        // Formatujemy nazwy statusów do wyświetlenia
-        $formattedOrderStatuses = [];
-        foreach ($orderStatuses as $status => $count) {
-            $statusName = match($status) {
-                'new' => 'Nowe',
-                'in_progress' => 'W realizacji',
-                'completed' => 'Zakończone',
-                'cancelled' => 'Anulowane',
-                default => ucfirst($status)
-            };
-            $formattedOrderStatuses[$statusName] = $count;
+
+        $dailyRevenue = Transaction::select(
+                DB::raw('DATE(created_at) as date'),
+                DB::raw('SUM(amount) as total')
+            )
+            ->where('status', 'completed')
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->groupBy('date')
+            ->orderBy('date')
+            ->pluck('total', 'date')
+            ->toArray();
+
+        $period = \Carbon\CarbonPeriod::create($startDate, $endDate);
+        $revenueData = [];
+        foreach ($period as $date) {
+            $dateKey = $date->format('d.m');
+            $fullDateKey = $date->format('Y-m-d');
+            $revenueData[$dateKey] = $dailyRevenue[$fullDateKey] ?? 0;
         }
-        
-        // Najczęściej zamawiane dania z filtrowaniem
+
         $popularDishesQuery = OrderItem::join('menus', 'order_items.menu_id', '=', 'menus.id')
             ->join('orders', 'order_items.order_id', '=', 'orders.id')
             ->whereBetween('orders.created_at', [$startDate, $endDate])
-            ->where('order_items.item_type', 'menu')
             ->whereNotNull('order_items.menu_id');
             
         if ($dishTypeFilter) {
@@ -83,55 +75,38 @@ class DashboardController extends Controller
         
         $popularDishes = $popularDishesQuery
             ->selectRaw('menus.name, SUM(order_items.quantity) as ordered')
-            ->groupBy('menus.name')
+            ->groupBy('menus.id', 'menus.name')
             ->orderByDesc('ordered')
             ->limit(5)
             ->pluck('ordered', 'menus.name')
             ->toArray();
             
-        // Jeśli brak danych, wyświetlamy puste wartości dla popularnych dań
         if (empty($popularDishes)) {
-            $popularDishesQuery = Menu::query();
-            
-            if ($dishTypeFilter) {
-                $popularDishesQuery->where('category', $dishTypeFilter);
-            }
-            
-            $popularDishes = $popularDishesQuery
-                ->select('name')
-                ->limit(5)
-                ->get()
-                ->pluck('name')
-                ->mapWithKeys(function($name) {
-                    return [$name => 0];
-                })
-                ->toArray();
+            $popularDishes = [
+                'Kurczak z ryżem' => 0,
+                'Sałatka grecka' => 0,
+                'Pasta bolognese' => 0,
+                'Smoothie owocowe' => 0,
+                'Kanapki' => 0
+            ];
         }
-        
-        // Lista kategorii posiłków do filtrowania
-        $mealCategories = Menu::distinct()->pluck('category')->toArray();
-        
-        // Statystyki numeryczne dla administratora
-        $adminStats = [
-            'totalUsers' => $totalUsers,
-            'totalOrders' => $totalOrders,
-            'totalRevenue' => $totalRevenue,
-            'totalMenuItems' => $totalMenuItems,
-            'totalDietPlans' => $totalDietPlans,
-            'transactionCount' => Transaction::whereBetween('created_at', [$startDate, $endDate])->count(),
-            'failedTransactions' => Transaction::where('status', 'failed')
-                ->whereBetween('created_at', [$startDate, $endDate])
-                ->count()
-        ];
-        
+
+        $recentOrders = Order::with(['user'])
+            ->whereBetween('created_at', [$startDate, $endDate])
+            ->orderBy('created_at', 'desc')
+            ->paginate(5);
+
         return view('dashboard', compact(
-            'formattedOrderStatuses', 
-            'popularDishes', 
-            'adminStats',
-            'startDate',
-            'endDate',
-            'mealCategories',
-            'dishTypeFilter'
+            'totalUsers',
+            'totalOrders', 
+            'totalRevenue',
+            'totalMenuItems',
+            'totalDietPlans',
+            'revenueData',
+            'popularDishes',
+            'dateRange',
+            'dishTypeFilter',
+            'recentOrders'
         ));
     }
 }

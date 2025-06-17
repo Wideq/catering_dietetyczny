@@ -312,49 +312,112 @@
 
 @push('scripts')
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const iconOptions = document.querySelectorAll('.icon-option');
-        const iconInput = document.getElementById('icon');
-        const iconPreview = document.getElementById('iconPreview');
+document.addEventListener('DOMContentLoaded', function() {
+    const dietForm = document.querySelector('form');
+    
+    dietForm.addEventListener('submit', function(e) {
+        let isValid = true;
         
-        iconOptions.forEach(option => {
-            option.addEventListener('click', function() {
-                iconOptions.forEach(opt => opt.classList.remove('selected'));
-                
-                this.classList.add('selected');
-                
-                const iconValue = this.getAttribute('data-icon');
-                
-                iconInput.value = iconValue;
-                
-                iconPreview.className = 'fas ' + iconValue;
-            });
-        });
+        const name = document.getElementById('name');
+        if (name.value.trim().length < 3) {
+            showError(name, 'Nazwa diety musi mieć co najmniej 3 znaki');
+            isValid = false;
+        } else {
+            clearError(name);
+        }
         
-        const imageInput = document.getElementById('image');
-        const imagePreviewContainer = document.getElementById('imagePreview');
+        const description = document.getElementById('description');
+        if (description.value.trim().length < 20) {
+            showError(description, 'Opis musi mieć co najmniej 20 znaków');
+            isValid = false;
+        } else {
+            clearError(description);
+        }
         
-        imageInput.addEventListener('change', function() {
-            while(imagePreviewContainer.firstChild) {
-                imagePreviewContainer.removeChild(imagePreviewContainer.firstChild);
-            }
+        const price = document.getElementById('price_per_day');
+        const priceValue = parseFloat(price.value);
+        if (isNaN(priceValue) || priceValue <= 0) {
+            showError(price, 'Cena musi być liczbą większą od 0');
+            isValid = false;
+        } else if (priceValue > 500) {
+            showError(price, 'Cena za dzień nie może przekraczać 500 zł');
+            isValid = false;
+        } else {
+            clearError(price);
+        }
+        
+        const icon = document.getElementById('icon');
+        if (icon.value.trim() === '') {
+            showError(icon, 'Wybierz ikonę dla diety');
+            isValid = false;
+        } else {
+            clearError(icon);
+        }
+        
+        const image = document.getElementById('image');
+        if (image.files.length > 0) {
+            const file = image.files[0];
+            const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg'];
+            const maxSize = 2 * 1024 * 1024;
             
-            const file = this.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    const img = document.createElement('img');
-                    img.src = e.target.result;
-                    imagePreviewContainer.appendChild(img);
-                }
-                reader.readAsDataURL(file);
+            if (!allowedTypes.includes(file.type)) {
+                showError(image, 'Dozwolone formaty: JPG, PNG');
+                isValid = false;
+            } else if (file.size > maxSize) {
+                showError(image, 'Plik nie może być większy niż 2MB');
+                isValid = false;
             } else {
-                const placeholder = document.createElement('span');
-                placeholder.className = 'image-placeholder';
-                placeholder.innerText = 'Podgląd zdjęcia będzie tutaj';
-                imagePreviewContainer.appendChild(placeholder);
+                clearError(image);
             }
-        });
+        }
+        
+        if (!isValid) {
+            e.preventDefault();
+        }
     });
+    
+    const imageInput = document.getElementById('image');
+    imageInput.addEventListener('change', function() {
+        const file = this.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                let preview = document.querySelector('.image-preview');
+                if (!preview) {
+                    preview = document.createElement('div');
+                    preview.className = 'image-preview mt-2';
+                    imageInput.parentNode.appendChild(preview);
+                }
+                preview.innerHTML = `
+                    <img src="${e.target.result}" 
+                         alt="Podgląd" 
+                         class="img-thumbnail" 
+                         style="max-width: 200px; max-height: 150px;">
+                    <small class="d-block text-muted">Podgląd zdjęcia</small>
+                `;
+            };
+            reader.readAsDataURL(file);
+        }
+    });
+    
+    function showError(field, message) {
+        field.classList.add('is-invalid');
+        let errorDiv = field.parentNode.querySelector('.invalid-feedback');
+        if (!errorDiv) {
+            errorDiv = document.createElement('div');
+            errorDiv.className = 'invalid-feedback';
+            field.parentNode.appendChild(errorDiv);
+        }
+        errorDiv.textContent = message;
+    }
+    
+    function clearError(field) {
+        field.classList.remove('is-invalid');
+        const errorDiv = field.parentNode.querySelector('.invalid-feedback');
+        if (errorDiv) {
+            errorDiv.remove();
+        }
+    }
+});
 </script>
 @endpush

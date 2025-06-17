@@ -13,25 +13,19 @@ class OrderFactory extends Factory
 {
     public function definition()
     {
-        // Generuj datę na podstawie prawdopodobieństwa
         $randomWeight = rand(1, 100);
         $orderDate = Carbon::now()->subDays(rand(1, 180));
         
         if ($randomWeight <= 40) {
-            // Ostatni miesiąc - 40% zamówień
             $orderDate = Carbon::now()->subDays(rand(1, 30));
         } elseif ($randomWeight <= 70) {
-            // Przedostatni miesiąc - 30% zamówień
             $orderDate = Carbon::now()->subDays(rand(31, 60));
         } elseif ($randomWeight <= 90) {
-            // 3 miesiące temu - 20% zamówień
             $orderDate = Carbon::now()->subDays(rand(61, 90));
         } else {
-            // Starsze zamówienia - 10%
             $orderDate = Carbon::now()->subDays(rand(91, 180));
         }
 
-        // Różne statusy z realistycznymi proporcjami
         $randomStatus = rand(1, 100);
         if ($randomStatus <= 60) {
             $status = 'completed';
@@ -43,12 +37,11 @@ class OrderFactory extends Factory
             $status = 'cancelled';
         }
 
-        // Losowa suma zamówienia (realistyczne wartości)
         $totalAmount = $this->faker->randomFloat(2, 25.00, 500.00);
 
         return [
             'user_id' => User::inRandomOrder()->first()?->id ?? User::factory(),
-            'menu_id' => null, // Będzie ustawiane w afterCreating
+            'menu_id' => null, 
             'quantity' => $this->faker->numberBetween(1, 3),
             'order_date' => $orderDate,
             'status' => $status,
@@ -58,9 +51,7 @@ class OrderFactory extends Factory
         ];
     }
 
-    /**
-     * Konfiguracja dla zamówień pojedynczych dań
-     */
+ 
     public function singleDish()
     {
         return $this->state(function (array $attributes) {
@@ -72,23 +63,19 @@ class OrderFactory extends Factory
         });
     }
 
-    /**
-     * Konfiguracja dla zamówień diet (catering)
-     */
+
     public function dietPlan()
     {
         return $this->state(function (array $attributes) {
             return [
                 'menu_id' => null,
                 'quantity' => 1,
-                'total_amount' => $this->faker->randomFloat(2, 200.00, 2000.00), // Diety są droższe
+                'total_amount' => $this->faker->randomFloat(2, 200.00, 2000.00), 
             ];
         });
     }
 
-    /**
-     * Zamówienia z ostatniego tygodnia
-     */
+
     public function recent()
     {
         return $this->state(function (array $attributes) {
@@ -101,9 +88,7 @@ class OrderFactory extends Factory
         });
     }
 
-    /**
-     * Zamówienia zakończone
-     */
+
     public function completed()
     {
         return $this->state(function (array $attributes) {
@@ -113,22 +98,18 @@ class OrderFactory extends Factory
         });
     }
 
-    /**
-     * Zamówienia anulowane
-     */
+
     public function cancelled()
     {
         return $this->state(function (array $attributes) {
             return [
                 'status' => 'cancelled',
-                'total_amount' => 0, // Anulowane zamówienia nie generują przychodu
+                'total_amount' => 0, 
             ];
         });
     }
 
-    /**
-     * Zamówienia z wysoką wartością
-     */
+
     public function highValue()
     {
         return $this->state(function (array $attributes) {
@@ -139,19 +120,14 @@ class OrderFactory extends Factory
         });
     }
 
-    /**
-     * Zamówienia sezonowe (więcej w weekendy)
-     */
     public function weekend()
     {
         return $this->state(function (array $attributes) {
-            // Znajdź ostatni weekend
             $date = Carbon::now();
             while (!in_array($date->dayOfWeek, [Carbon::SATURDAY, Carbon::SUNDAY])) {
                 $date->subDay();
             }
             
-            // Wybierz losowy weekend z ostatnich 4 tygodni
             $weekendsAgo = rand(0, 3);
             $weekendDate = $date->copy()->subWeeks($weekendsAgo);
             
@@ -159,39 +135,38 @@ class OrderFactory extends Factory
                 'order_date' => $weekendDate,
                 'created_at' => $weekendDate,
                 'updated_at' => $weekendDate->copy()->addHours(rand(1, 48)),
-                'total_amount' => $this->faker->randomFloat(2, 80.00, 400.00), // Weekendy = wyższe kwoty
+                'total_amount' => $this->faker->randomFloat(2, 80.00, 400.00), 
             ];
         });
     }
 
-    /**
-     * Po utworzeniu zamówienia
-     */
+ 
     public function configure()
     {
         return $this->afterCreating(function ($order) {
-            // Twórz transakcję dla każdego zamówienia
-            if ($order->total_amount > 0) {
-                Transaction::create([
-                    'user_id' => $order->user_id,
-                    'amount' => $order->total_amount,
-                    'status' => $order->status === 'completed' ? 'completed' : 
-                              ($order->status === 'cancelled' ? 'failed' : 'pending'),
-                    'description' => 'Zamówienie #' . $order->id,
-                    'payment_method' => $this->faker->randomElement(['online', 'card', 'transfer']),
-                    'created_at' => $order->created_at,
-                    'updated_at' => $order->updated_at,
-                ]);
-            }
+        $transaction = null;
+        
+        if ($order->total_amount > 0) {
+            $transaction = Transaction::create([
+                'user_id' => $order->user_id,
+                'amount' => $order->total_amount,
+                'status' => $order->status === 'completed' ? 'completed' : 
+                          ($order->status === 'cancelled' ? 'failed' : 'pending'),
+                'description' => 'Zamówienie #' . $order->id,
+                'payment_method' => $this->faker->randomElement(['online', 'card', 'transfer']),
+                'created_at' => $order->created_at,
+                'updated_at' => $order->updated_at,
+            ]);
+            
+            $order->update(['transaction_id' => $transaction->id]);
+        }
 
-            // Twórz pozycje zamówienia (OrderItems)
-            $itemsCount = rand(1, 4); // 1-4 pozycje w zamówieniu
+            $itemsCount = rand(1, 4);
             
             for ($i = 0; $i < $itemsCount; $i++) {
-                $isDietPlan = rand(1, 100) <= 30; // 30% szans na dietę
+                $isDietPlan = rand(1, 100) <= 30; 
                 
                 if ($isDietPlan && DietPlan::count() > 0) {
-                    // Pozycja z dietą
                     $dietPlan = DietPlan::inRandomOrder()->first();
                     $duration = $this->faker->randomElement([5, 7, 14, 28]);
                     $price = $dietPlan->price_per_day * $duration;
@@ -208,7 +183,6 @@ class OrderFactory extends Factory
                         'notes' => $this->faker->optional(0.3)->sentence(),
                     ]);
                 } else {
-                    // Pozycja z menu
                     $menu = Menu::inRandomOrder()->first();
                     if ($menu) {
                         $quantity = rand(1, 3);

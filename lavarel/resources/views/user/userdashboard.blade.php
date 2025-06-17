@@ -314,7 +314,6 @@
             @csrf
             @method('PUT')
             
-            <!-- Avatar section -->
             <div class="avatar-section">
                 <div class="avatar-container">
                     @if(Auth::user()->avatar)
@@ -456,40 +455,116 @@
 
 @push('scripts')
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        // Preview avatara
-        const avatarInput = document.getElementById('avatar');
-        const avatarContainer = document.querySelector('.avatar-container');
-        
-        avatarInput.addEventListener('change', function(e) {
-            const file = e.target.files[0];
-            if (file) {
-                const reader = new FileReader();
-                reader.onload = function(e) {
-                    avatarContainer.innerHTML = `<img src="${e.target.result}" alt="Podgląd" class="current-avatar">`;
+document.addEventListener('DOMContentLoaded', function() {
+    const profileForm = document.querySelector('form[action*="user.update"]');
+    
+    if (profileForm) {
+        profileForm.addEventListener('submit', function(e) {
+            let isValid = true;
+            
+            const name = document.getElementById('name');
+            if (name.value.trim().length < 2) {
+                showError(name, 'Imię musi mieć co najmniej 2 znaki');
+                isValid = false;
+            } else {
+                clearError(name);
+            }
+            
+            const email = document.getElementById('email');
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email.value)) {
+                showError(email, 'Wprowadź poprawny adres email');
+                isValid = false;
+            } else {
+                clearError(email);
+            }
+            
+            const currentPassword = document.getElementById('current_password');
+            const newPassword = document.getElementById('new_password');
+            const confirmPassword = document.getElementById('new_password_confirmation');
+            
+            if (newPassword.value || confirmPassword.value || currentPassword.value) {
+                if (!currentPassword.value) {
+                    showError(currentPassword, 'Wprowadź aktualne hasło');
+                    isValid = false;
+                } else {
+                    clearError(currentPassword);
                 }
-                reader.readAsDataURL(file);
+                
+                if (newPassword.value.length < 8) {
+                    showError(newPassword, 'Nowe hasło musi mieć co najmniej 8 znaków');
+                    isValid = false;
+                } else {
+                    clearError(newPassword);
+                }
+                
+                if (newPassword.value !== confirmPassword.value) {
+                    showError(confirmPassword, 'Hasła nie są identyczne');
+                    isValid = false;
+                } else {
+                    clearError(confirmPassword);
+                }
+            }
+            
+            const avatar = document.getElementById('avatar');
+            if (avatar.files.length > 0) {
+                const file = avatar.files[0];
+                const allowedTypes = ['image/jpeg', 'image/png', 'image/jpg', 'image/gif'];
+                const maxSize = 2 * 1024 * 1024;
+                
+                if (!allowedTypes.includes(file.type)) {
+                    showError(avatar, 'Dozwolone formaty: JPG, PNG, GIF');
+                    isValid = false;
+                } else if (file.size > maxSize) {
+                    showError(avatar, 'Plik nie może być większy niż 2MB');
+                    isValid = false;
+                } else {
+                    clearError(avatar);
+                }
+            }
+            
+            if (!isValid) {
+                e.preventDefault();
             }
         });
-
-        // Auto-hide success messages
-        const successAlert = document.querySelector('.alert-success');
-        if (successAlert) {
-            setTimeout(function() {
-                successAlert.style.animation = 'fadeOut 0.5s ease-in-out forwards';
-                setTimeout(function() {
-                    successAlert.remove();
-                }, 500);
-            }, 5000);
+    }
+    
+    const avatarInput = document.getElementById('avatar');
+    const avatarContainer = document.querySelector('.avatar-container');
+    
+    avatarInput.addEventListener('change', function(e) {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const img = avatarContainer.querySelector('img');
+                if (img) {
+                    img.src = e.target.result;
+                }
+            };
+            reader.readAsDataURL(file);
         }
     });
-</script>
-
-<style>
-    @keyframes fadeOut {
-        from { opacity: 1; }
-        to { opacity: 0; }
+    
+    function showError(field, message) {
+        field.classList.add('is-invalid');
+        let errorDiv = field.parentNode.querySelector('.invalid-feedback');
+        if (!errorDiv) {
+            errorDiv = document.createElement('div');
+            errorDiv.className = 'invalid-feedback';
+            field.parentNode.appendChild(errorDiv);
+        }
+        errorDiv.textContent = message;
     }
-</style>
+    
+    function clearError(field) {
+        field.classList.remove('is-invalid');
+        const errorDiv = field.parentNode.querySelector('.invalid-feedback');
+        if (errorDiv) {
+            errorDiv.remove();
+        }
+    }
+});
+</script>
 @endpush
 @endsection

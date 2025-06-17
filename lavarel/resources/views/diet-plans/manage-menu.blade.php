@@ -1,6 +1,7 @@
 @extends('layout')
 
 @section('title', 'Zarządzanie posiłkami diety - PureMeal')
+
 @push('styles')
 <style>
     .menu-container {
@@ -31,102 +32,145 @@
         border-radius: 10px;
         padding: 20px;
         margin-bottom: 30px;
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.05);
-        text-align: center;
-    }
-    
-    .price-summary h3 {
-        margin-bottom: 15px;
-        color: var(--primary-color);
+        border: 2px solid #e9ecef;
     }
     
     .price-calculation {
         display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
         gap: 15px;
         margin-bottom: 15px;
     }
     
     .price-item {
-        background-color: white;
-        padding: 10px;
-        border-radius: 8px;
         text-align: center;
-        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+        padding: 10px;
+        background: white;
+        border-radius: 8px;
+        border: 1px solid #dee2e6;
     }
     
     .price-label {
         font-size: 0.9rem;
-        color: var(--gray-medium);
+        color: #6c757d;
         margin-bottom: 5px;
     }
     
     .price-value {
-        font-size: 1.2rem;
-        font-weight: 700;
-        color: var(--primary-color);
+        font-size: 1.1rem;
+        font-weight: 600;
+        color: #495057;
     }
     
     .total-price {
-        font-size: 1.5rem;
+        text-align: center;
+        font-size: 1.3rem;
         font-weight: 700;
-        color: var(--accent);
-        margin-top: 15px;
+        color: #28a745;
+        padding: 15px;
+        background: white;
+        border-radius: 8px;
+        border: 2px solid #28a745;
+    }
+    
+    .menu-search {
+        margin-bottom: 20px;
+    }
+    
+    .search-input {
+        width: 100%;
+        padding: 12px 20px;
+        border: 2px solid #e9ecef;
+        border-radius: 25px;
+        font-size: 16px;
+        transition: all 0.3s ease;
+    }
+    
+    .search-input:focus {
+        outline: none;
+        border-color: #007bff;
+        box-shadow: 0 0 0 3px rgba(0,123,255,0.1);
+    }
+    
+    .menu-filter {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        margin-bottom: 30px;
+        justify-content: center;
+    }
+    
+    .filter-btn {
+        padding: 8px 16px;
+        border: 2px solid #dee2e6;
+        background: white;
+        color: #495057;
+        border-radius: 20px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        font-weight: 500;
+    }
+    
+    .filter-btn:hover {
+        border-color: #007bff;
+        color: #007bff;
+    }
+    
+    .filter-btn.active {
+        background: #007bff;
+        color: white;
+        border-color: #007bff;
     }
     
     .meal-category {
-        margin: 30px 0 15px;
-        padding-bottom: 10px;
-        border-bottom: 1px solid #eee;
         font-size: 1.3rem;
-        color: var(--primary-color);
         font-weight: 600;
+        color: #495057;
+        margin: 30px 0 15px 0;
+        padding: 10px 0;
+        border-bottom: 2px solid #007bff;
     }
     
-    .form-check {
-        padding: 15px 20px;
-        border-radius: 8px;
-        border: 1px solid #eee;
-        transition: all 0.3s;
-        margin-bottom: 15px;
+    .menu-items-container {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+        gap: 15px;
+        margin-bottom: 30px;
+    }
+    
+    .menu-item {
         display: flex;
-        align-items: center;
+        align-items: flex-start;
+        padding: 15px;
+        border: 2px solid #e9ecef;
+        border-radius: 10px;
+        transition: all 0.3s ease;
+        background: white;
     }
     
-    .form-check:hover {
-        background-color: #f9f9fa;
-        box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
-        transform: translateY(-2px);
+    .menu-item:hover {
+        border-color: #007bff;
+        box-shadow: 0 4px 8px rgba(0,123,255,0.1);
+    }
+    
+    .menu-item.selected {
+        border-color: #28a745;
+        background: #f8fff9;
     }
     
     .form-check-input {
-        margin-right: 15px;
-        width: 20px !important;
-        height: 20px !important;
-        position: relative !important;
-        display: inline-block !important;
-        visibility: visible !important;
-        opacity: 1 !important;
-        cursor: pointer;
-        border: 1px solid #aaa;
-        border-radius: 4px;
-        appearance: auto !important;
-        -webkit-appearance: auto !important;
-    }
-    
-    .form-check-input:checked {
-        background-color: var(--accent) !important;
-        border-color: var(--accent) !important;
+        margin-top: 5px;
+        transform: scale(1.2);
     }
     
     .menu-item-details {
-        flex-grow: 1;
+        margin-left: 12px;
+        flex: 1;
     }
     
     .menu-item-name {
         font-weight: 600;
-        color: var(--primary-color);
-        font-size: 1.1rem;
+        color: #495057;
         margin-bottom: 5px;
         display: flex;
         justify-content: space-between;
@@ -134,116 +178,125 @@
     }
     
     .menu-item-price {
-        color: var(--accent);
-        font-weight: 600;
+        font-size: 0.9rem;
+        color: #007bff;
+        font-weight: 700;
     }
     
     .menu-item-description {
-        color: var(--gray-medium);
-        font-size: 0.9rem;
+        font-size: 0.85rem;
+        color: #6c757d;
+        line-height: 1.4;
+        margin-bottom: 8px;
     }
     
     .menu-item-macros {
         display: flex;
-        gap: 15px;
-        margin-top: 8px;
-        font-size: 0.8rem;
+        flex-wrap: wrap;
+        gap: 8px;
     }
     
     .macro {
-        color: var(--gray-medium);
+        font-size: 0.75rem;
+        background: #f8f9fa;
+        padding: 2px 6px;
+        border-radius: 4px;
+        color: #495057;
     }
     
     .macro-value {
         font-weight: 600;
-        color: var(--primary-color);
-    }
-    
-    .menu-search {
-        margin-bottom: 25px;
-    }
-    
-    .search-input {
-        width: 100%;
-        padding: 12px 20px;
-        border-radius: 25px;
-        border: 1px solid #ddd;
-        transition: all 0.3s;
-        font-size: 1rem;
-    }
-    
-    .search-input:focus {
-        outline: none;
-        border-color: var(--accent);
-        box-shadow: 0 0 0 3px rgba(136, 136, 136, 0.2);
-    }
-    
-    .menu-filter {
-        display: flex;
-        gap: 10px;
-        margin-bottom: 25px;
-        flex-wrap: wrap;
-        justify-content: center;
-    }
-    
-    .filter-btn {
-        padding: 8px 16px;
-        border-radius: 20px;
-        background-color: white;
-        border: 1px solid #ddd;
-        cursor: pointer;
-        transition: all 0.2s;
-        color: var(--gray-medium);
-    }
-    
-    .filter-btn.active {
-        background-color: var(--accent);
-        color: white;
-        border-color: var(--accent);
-    }
-    
-    .filter-btn:hover:not(.active) {
-        background-color: #f5f5f5;
-    }
-    
-    .btn-submit {
-        background-color: var(--accent);
-        border: none;
-        padding: 12px 30px;
-        border-radius: 5px;
-        color: white;
-        font-weight: 600;
-        transition: all 0.3s;
-        cursor: pointer;
-    }
-    
-    .btn-submit:hover {
-        background-color: var(--primary-color);
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
-    }
-    
-    .btn-back {
-        background-color: #6c757d;
-        color: white;
-        text-decoration: none;
-        padding: 12px 25px;
-        border-radius: 5px;
-        margin-right: 10px;
-        display: inline-block;
-        transition: all 0.3s;
-    }
-    
-    .btn-back:hover {
-        background-color: #5a6268;
-        color: white;
-        transform: translateY(-2px);
-        box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+        color: #007bff;
     }
     
     .menu-submit {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
         margin-top: 30px;
-        text-align: center;
+        padding-top: 20px;
+        border-top: 2px solid #e9ecef;
+    }
+    
+    .btn-back {
+        padding: 12px 24px;
+        background: #6c757d;
+        color: white;
+        text-decoration: none;
+        border-radius: 5px;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-back:hover {
+        background: #5a6268;
+        color: white;
+        text-decoration: none;
+    }
+    
+    .btn-submit {
+        padding: 12px 30px;
+        background: #28a745;
+        color: white;
+        border: none;
+        border-radius: 5px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+    
+    .btn-submit:hover {
+        background: #218838;
+    }
+    
+    .btn-submit:disabled {
+        background: #6c757d;
+        cursor: not-allowed;
+    }
+    
+    /* Validation styles */
+    .validation-error {
+        color: #dc3545;
+        font-size: 0.875rem;
+        margin-top: 10px;
+        padding: 10px;
+        background: #f8d7da;
+        border: 1px solid #f5c6cb;
+        border-radius: 5px;
+    }
+    
+    .validation-warning {
+        color: #856404;
+        font-size: 0.875rem;
+        margin-top: 10px;
+        padding: 10px;
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        border-radius: 5px;
+    }
+    
+    @media (max-width: 768px) {
+        .menu-container {
+            margin: 20px;
+            padding: 20px;
+        }
+        
+        .menu-items-container {
+            grid-template-columns: 1fr;
+        }
+        
+        .price-calculation {
+            grid-template-columns: 1fr;
+        }
+        
+        .menu-submit {
+            flex-direction: column;
+            gap: 15px;
+        }
+        
+        .btn-back, .btn-submit {
+            width: 100%;
+            text-align: center;
+        }
     }
 </style>
 @endpush
@@ -298,11 +351,13 @@
             <button type="button" class="filter-btn" data-filter="kolacja">Kolacje</button>
         </div>
         
-        <form action="{{ route('diet-plans.update-menu', $dietPlan->id) }}" method="POST">
+        <form action="{{ route('diet-plans.update-menu', $dietPlan->id) }}" method="POST" id="menu-form">
             @csrf
             @method('PUT')
             
             <input type="hidden" name="price_per_day" id="final_price" value="{{ $dietPlan->price_per_day }}">
+            
+            <div id="validation-messages"></div>
             
             <h3 class="meal-category">Śniadania</h3>
             <div class="menu-items-container">
@@ -415,8 +470,12 @@
             </div>
             
             <div class="menu-submit">
-                <a href="{{ route('diet-plans.index') }}" class="btn-back">Powrót</a>
-                <button type="submit" class="btn-submit">Zapisz menu i cenę</button>
+                <a href="{{ route('diet-plans.index') }}" class="btn-back">
+                    <i class="fas fa-arrow-left me-2"></i>Powrót
+                </a>
+                <button type="submit" class="btn-submit" id="submit-btn">
+                    <i class="fas fa-save me-2"></i>Zapisz menu i cenę
+                </button>
             </div>
         </form>
     </div>
@@ -425,102 +484,199 @@
 
 @push('scripts')
 <script>
-    document.addEventListener('DOMContentLoaded', function() {
-        const filterButtons = document.querySelectorAll('.filter-btn');
-        const menuItems = document.querySelectorAll('.menu-item');
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.getElementById('menu-form');
+    const checkboxes = document.querySelectorAll('.menu-checkbox');
+    const submitButton = document.getElementById('submit-btn');
+    const filterButtons = document.querySelectorAll('.filter-btn');
+    const menuItems = document.querySelectorAll('.menu-item');
+    const searchInput = document.getElementById('searchInput');
+    const validationContainer = document.getElementById('validation-messages');
+    
+    const mealsPriceElement = document.getElementById('meals-price');
+    const discountPriceElement = document.getElementById('discount-price');
+    const mealsCountElement = document.getElementById('meals-count');
+    const totalPriceElement = document.getElementById('total-price');
+    const finalPriceInput = document.getElementById('final_price');
+    const basePrice = parseFloat('{{ $dietPlan->price_per_day }}') || 0;
+    
+    form.addEventListener('submit', function(e) {
+        clearValidationMessages();
         
-        filterButtons.forEach(button => {
-            button.addEventListener('click', function() {
-                const filter = this.getAttribute('data-filter');
-                
-                filterButtons.forEach(btn => btn.classList.remove('active'));
-                this.classList.add('active');
-                
-                if (filter === 'all') {
-                    menuItems.forEach(item => {
-                        item.style.display = 'flex';
-                    });
-                } else {
-                    menuItems.forEach(item => {
-                        if (item.getAttribute('data-category').toLowerCase() === filter.toLowerCase()) {
-                            item.style.display = 'flex';
-                        } else {
-                            item.style.display = 'none';
-                        }
-                    });
-                }
-            });
+        const selectedItems = Array.from(checkboxes).filter(cb => cb.checked);
+        let hasErrors = false;
+        
+        if (selectedItems.length === 0) {
+            e.preventDefault();
+            showValidationMessage('Musisz wybrać co najmniej jeden posiłek dla diety', 'error');
+            hasErrors = true;
+        }
+        
+        if (selectedItems.length > 0 && selectedItems.length < 3) {
+            if (!confirm('Wybrałeś tylko ' + selectedItems.length + ' posiłek(ów). Czy na pewno chcesz kontynuować? Zalecamy minimum 3 posiłki dziennie.')) {
+                e.preventDefault();
+                return;
+            }
+        }
+        
+        const finalPrice = parseFloat(finalPriceInput.value);
+        if (isNaN(finalPrice) || finalPrice <= 0) {
+            e.preventDefault();
+            showValidationMessage('Cena końcowa musi być większa od 0 zł', 'error');
+            hasErrors = true;
+        }
+        
+        if (finalPrice > 200) {
+            if (!confirm('Cena końcowa (' + finalPrice.toFixed(2) + ' zł/dzień) jest bardzo wysoka. Czy na pewno chcesz kontynuować?')) {
+                e.preventDefault();
+                return;
+            }
+        }
+        
+        const categoryCounts = {};
+        selectedItems.forEach(item => {
+            const category = item.closest('.menu-item').dataset.category;
+            categoryCounts[category] = (categoryCounts[category] || 0) + 1;
         });
         
-        const searchInput = document.getElementById('searchInput');
-        searchInput.addEventListener('input', function() {
-            const searchTerm = this.value.toLowerCase().trim();
-            
-            if (searchTerm !== '') {
-                filterButtons.forEach(btn => btn.classList.remove('active'));
-                filterButtons[0].classList.add('active');
+        const missingCategories = [];
+        const importantCategories = ['śniadanie', 'obiad', 'kolacja'];
+        importantCategories.forEach(cat => {
+            if (!categoryCounts[cat]) {
+                missingCategories.push(cat);
+            }
+        });
+        
+        if (missingCategories.length > 0) {
+            showValidationMessage('Brakuje posiłków z kategorii: ' + missingCategories.join(', ') + '. Zalecamy dodanie posiłków z każdej podstawowej kategorii.', 'warning');
+        }
+        
+        if (!hasErrors) {
+            submitButton.innerHTML = '<span class="spinner-border spinner-border-sm me-2"></span>Zapisywanie...';
+            submitButton.disabled = true;
+        }
+    });
+    
+    function updateSubmitButton() {
+        const selectedCount = Array.from(checkboxes).filter(cb => cb.checked).length;
+        
+        if (selectedCount === 0) {
+            submitButton.disabled = true;
+            submitButton.innerHTML = '<i class="fas fa-exclamation-triangle me-2"></i>Wybierz posiłki';
+            submitButton.style.background = '#dc3545';
+        } else {
+            submitButton.disabled = false;
+            submitButton.innerHTML = '<i class="fas fa-save me-2"></i>Zapisz menu i cenę (' + selectedCount + ')';
+            submitButton.style.background = '#28a745';
+        }
+    }
+    
+    checkboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', function() {
+            const menuItem = this.closest('.menu-item');
+            if (this.checked) {
+                menuItem.classList.add('selected');
+            } else {
+                menuItem.classList.remove('selected');
             }
             
+            calculatePrice();
+            updateSubmitButton();
+            clearValidationMessages();
+        });
+    });
+    
+    function calculatePrice() {
+        const selectedCheckboxes = Array.from(checkboxes).filter(cb => cb.checked);
+        const selectedCount = selectedCheckboxes.length;
+        
+        let totalMealsPrice = 0;
+        selectedCheckboxes.forEach(checkbox => {
+            const menuItem = checkbox.closest('.menu-item');
+            const price = parseFloat(menuItem.dataset.price) || 0;
+            totalMealsPrice += price;
+        });
+        
+        let discountPercentage = 0;
+        if (selectedCount >= 5 && selectedCount < 10) {
+            discountPercentage = 10;
+        } else if (selectedCount >= 10) {
+            discountPercentage = 15;
+        }
+        
+        const discount = totalMealsPrice * (discountPercentage / 100);
+        const finalPrice = basePrice + totalMealsPrice - discount;
+        
+        mealsPriceElement.textContent = totalMealsPrice.toFixed(2) + ' zł';
+        discountPriceElement.textContent = discount.toFixed(2) + ' zł';
+        mealsCountElement.textContent = selectedCount;
+        totalPriceElement.textContent = 'Cena końcowa: ' + finalPrice.toFixed(2) + ' zł / dzień';
+        finalPriceInput.value = finalPrice.toFixed(2);
+        
+        if (finalPrice > 150) {
+            totalPriceElement.style.color = '#dc3545'; 
+        } else if (finalPrice > 100) {
+            totalPriceElement.style.color = '#ffc107'; 
+        } else {
+            totalPriceElement.style.color = '#28a745'; 
+        }
+    }
+    
+    filterButtons.forEach(button => {
+        button.addEventListener('click', function() {
+            const filter = this.getAttribute('data-filter');
+            
+            filterButtons.forEach(btn => btn.classList.remove('active'));
+            this.classList.add('active');
+            
             menuItems.forEach(item => {
-                const name = item.querySelector('.menu-item-name').textContent.toLowerCase();
-                const description = item.querySelector('.menu-item-description').textContent.toLowerCase();
-                
-                if (name.includes(searchTerm) || description.includes(searchTerm)) {
+                const category = item.getAttribute('data-category');
+                if (filter === 'all' || category === filter) {
                     item.style.display = 'flex';
                 } else {
                     item.style.display = 'none';
                 }
             });
         });
+    });
+    
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
         
-        const checkboxes = document.querySelectorAll('.menu-checkbox');
-        const mealsPriceElement = document.getElementById('meals-price');
-        const discountPriceElement = document.getElementById('discount-price');
-        const basePriceElement = document.getElementById('base-price');
-        const mealsCountElement = document.getElementById('meals-count');
-        const totalPriceElement = document.getElementById('total-price');
-        const finalPriceInput = document.getElementById('final_price');
-        
-        const basePrice = parseFloat('{{ $dietPlan->price_per_day }}');
-        
-        function calculatePrice() {
-            let totalMealsPrice = 0;
-            let selectedCount = 0;
+        menuItems.forEach(item => {
+            const name = item.querySelector('.menu-item-name').textContent.toLowerCase();
+            const description = item.querySelector('.menu-item-description').textContent.toLowerCase();
             
-            checkboxes.forEach(checkbox => {
-                if (checkbox.checked) {
-                    selectedCount++;
-                    const menuItem = checkbox.closest('.menu-item');
-                    const price = parseFloat(menuItem.getAttribute('data-price'));
-                    totalMealsPrice += price;
-                }
-            });
-            
-     
-            let discountPercentage = 0;
-            if (selectedCount >= 5 && selectedCount < 10) {
-                discountPercentage = 10;
-            } else if (selectedCount >= 10) {
-                discountPercentage = 15;
+            if (name.includes(searchTerm) || description.includes(searchTerm)) {
+                item.style.display = 'flex';
+            } else {
+                item.style.display = 'none';
             }
-            
-            const discount = totalMealsPrice * (discountPercentage / 100);
-            
-            const finalPrice = basePrice + totalMealsPrice - discount;
-            
-            mealsPriceElement.textContent = totalMealsPrice.toFixed(2) + ' zł';
-            discountPriceElement.textContent = discount.toFixed(2) + ' zł';
-            mealsCountElement.textContent = selectedCount;
-            totalPriceElement.textContent = 'Cena końcowa: ' + finalPrice.toFixed(2) + ' zł / dzień';
-            
-            finalPriceInput.value = finalPrice.toFixed(2);
-        }
-        
-        calculatePrice();
-        
-        checkboxes.forEach(checkbox => {
-            checkbox.addEventListener('change', calculatePrice);
         });
     });
+    
+    function showValidationMessage(message, type) {
+        const messageDiv = document.createElement('div');
+        messageDiv.className = `validation-${type}`;
+        messageDiv.innerHTML = `
+            <i class="fas fa-${type === 'error' ? 'exclamation-triangle' : 'exclamation-circle'} me-2"></i>
+            ${message}
+        `;
+        validationContainer.appendChild(messageDiv);
+    }
+    
+    function clearValidationMessages() {
+        validationContainer.innerHTML = '';
+    }
+    
+    calculatePrice();
+    updateSubmitButton();
+    
+    checkboxes.forEach(checkbox => {
+        if (checkbox.checked) {
+            checkbox.closest('.menu-item').classList.add('selected');
+        }
+    });
+});
 </script>
 @endpush

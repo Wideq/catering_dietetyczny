@@ -248,4 +248,69 @@
         </div>
     </div>
 </section>
+
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const contactForm = document.querySelector('form');
+    
+    if (contactForm) {
+        contactForm.addEventListener('submit', function(e) {
+            const name = document.getElementById('name');
+            const email = document.getElementById('email');
+            const message = document.getElementById('message');
+            
+            let isValid = true;
+            
+            // Walidacja imienia
+            if (name.value.trim().length < 2) {
+                showError(name, 'Imię musi mieć co najmniej 2 znaki');
+                isValid = false;
+            } else {
+                clearError(name);
+            }
+            
+            // Walidacja email
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(email.value)) {
+                showError(email, 'Wprowadź poprawny adres email');
+                isValid = false;
+            } else {
+                clearError(email);
+            }
+            
+            // Walidacja wiadomości
+            if (message.value.trim().length < 10) {
+                showError(message, 'Wiadomość musi mieć co najmniej 10 znaków');
+                isValid = false;
+            } else {
+                clearError(message);
+            }
+            
+            if (!isValid) {
+                e.preventDefault();
+            }
+        });
+    }
+    
+    function showError(field, message) {
+        field.classList.add('is-invalid');
+        let errorDiv = field.parentNode.querySelector('.invalid-feedback');
+        if (!errorDiv) {
+            errorDiv = document.createElement('div');
+            errorDiv.className = 'invalid-feedback';
+            field.parentNode.appendChild(errorDiv);
+        }
+        errorDiv.textContent = message;
+    }
+    
+    function clearError(field) {
+        field.classList.remove('is-invalid');
+        const errorDiv = field.parentNode.querySelector('.invalid-feedback');
+        if (errorDiv) {
+            errorDiv.remove();
+        }
+    }
+});
+</script>
 @endsection

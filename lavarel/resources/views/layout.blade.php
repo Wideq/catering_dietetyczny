@@ -2,20 +2,194 @@
 <html lang="pl">
 
 <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <title>@yield('title', 'PureMeal - Catering Dietetyczny')</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>@yield('title', 'PureMeal - Twoja zdrowa dieta')</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet" />
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.css" rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;700&display=swap" rel="stylesheet" />
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/animate.css/4.1.1/animate.min.css" />
-    @stack('styles')
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-    @stack('scripts')
+    
+    <!-- GLOBALNE STYLE PAGINACJI -->
     <style>
+        /* === PAGINACJA - UNIWERSALNE STYLE === */
+        .pagination-wrapper {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            margin: 40px 0;
+            padding: 20px;
+            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
+            border-radius: 15px;
+        }
+
+        nav[aria-label="pagination"] {
+            margin: 0 !important;
+        }
+
+        .pagination {
+            display: flex !important;
+            list-style: none !important;
+            padding: 0 !important;
+            margin: 0 !important;
+            border-radius: 12px !important;
+            overflow: hidden !important;
+            box-shadow: 0 6px 20px rgba(0,0,0,0.15) !important;
+            background: white !important;
+            border: 1px solid #e5e7eb !important;
+        }
+
+        .pagination .page-item {
+            margin: 0 !important;
+            border: none !important;
+        }
+
+        .pagination .page-link {
+            display: flex !important;
+            align-items: center !important;
+            justify-content: center !important;
+            padding: 12px 16px !important;
+            color: #374151 !important;
+            background-color: #fff !important;
+            border: 1px solid #e5e7eb !important;
+            border-left: none !important;
+            text-decoration: none !important;
+            transition: all 0.3s ease !important;
+            min-width: 44px !important;
+            height: 44px !important;
+            font-weight: 500 !important;
+            font-size: 0.9rem !important;
+            position: relative !important;
+        }
+
+        .pagination .page-item:first-child .page-link {
+            border-left: 1px solid #e5e7eb !important;
+            border-top-left-radius: 12px !important;
+            border-bottom-left-radius: 12px !important;
+        }
+
+        .pagination .page-item:last-child .page-link {
+            border-top-right-radius: 12px !important;
+            border-bottom-right-radius: 12px !important;
+        }
+
+        .pagination .page-link:hover {
+            background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+            color: white !important;
+            border-color: #3b82f6 !important;
+            transform: translateY(-2px) !important;
+            box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4) !important;
+            z-index: 2 !important;
+        }
+
+        .pagination .page-item.active .page-link {
+            background: linear-gradient(135deg, #3b82f6, #2563eb) !important;
+            border-color: #3b82f6 !important;
+            color: white !important;
+            font-weight: 600 !important;
+            box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4) !important;
+            transform: translateY(-1px) !important;
+            z-index: 1 !important;
+        }
+
+        .pagination .page-item.active .page-link:hover {
+            background: linear-gradient(135deg, #2563eb, #1d4ed8) !important;
+        }
+
+        .pagination .page-item.disabled .page-link {
+            color: #9ca3af !important;
+            background-color: #f9fafb !important;
+            border-color: #e5e7eb !important;
+            cursor: not-allowed !important;
+            opacity: 0.6 !important;
+        }
+
+        .pagination .page-item.disabled .page-link:hover {
+            transform: none !important;
+            box-shadow: none !important;
+            background-color: #f9fafb !important;
+            color: #9ca3af !important;
+            border-color: #e5e7eb !important;
+        }
+
+        /* Responsywność */
+        @media (max-width: 768px) {
+            .pagination-wrapper {
+                margin: 20px 0;
+                padding: 15px;
+            }
+            
+            .pagination .page-link {
+                padding: 8px 12px !important;
+                font-size: 14px !important;
+                min-width: 36px !important;
+                height: 36px !important;
+            }
+            
+            /* Ukryj środkowe numery na tablecie */
+            .pagination .page-item:not(.active):not(:first-child):not(:last-child):not([aria-label*="Previous"]):not([aria-label*="Next"]) {
+                display: none !important;
+            }
+        }
+
+        @media (max-width: 576px) {
+            .pagination {
+                border-radius: 8px !important;
+            }
+            
+            .pagination .page-link {
+                padding: 6px 10px !important;
+                font-size: 12px !important;
+                min-width: 32px !important;
+                height: 32px !important;
+            }
+            
+            .pagination-wrapper {
+                margin: 15px 0;
+                padding: 10px;
+            }
+        }
+
+        /* Specjalne style dla dashboardu */
+        .dashboard .pagination-wrapper {
+            background: transparent;
+            border-radius: 0;
+            padding: 30px 0;
+            margin: 20px 0;
+        }
+
+        .dashboard .pagination {
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1) !important;
+        }
+
+        /* Animacje */
+        .pagination .page-item {
+            animation: fadeInUp 0.3s ease forwards;
+        }
+
+        .pagination .page-item:nth-child(1) { animation-delay: 0.05s; }
+        .pagination .page-item:nth-child(2) { animation-delay: 0.1s; }
+        .pagination .page-item:nth-child(3) { animation-delay: 0.15s; }
+        .pagination .page-item:nth-child(4) { animation-delay: 0.2s; }
+        .pagination .page-item:nth-child(5) { animation-delay: 0.25s; }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Override dla konfliktów */
+        .pagination * {
+            box-sizing: border-box !important;
+        }
+        
         :root {
             --primary-color: #333;
             --secondary-color: #fff;
@@ -43,131 +217,105 @@
         }
 
         main {
-            flex: 1; 
+            flex: 1;
         }
 
-        footer {
-            background-color: var(--primary-color);
-            color: var(--secondary-color);
-            text-align: center;
+        .navbar {
+            background-color: var(--primary-color) !important;
             padding: 1rem 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
         }
 
-        /* Avatar styles */
+        .navbar-brand {
+            color: var(--secondary-color) !important;
+            font-weight: 700;
+            font-size: 1.8rem;
+            text-transform: lowercase;
+        }
+
+        .navbar-nav .nav-link {
+            color: var(--secondary-color) !important;
+            font-weight: 500;
+            margin: 0 10px;
+            transition: color 0.3s ease;
+        }
+
+        .navbar-nav .nav-link:hover {
+            color: var(--accent-color) !important;
+        }
+
         .user-avatar {
-            width: 32px;
-            height: 32px;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            border: 2px solid var(--secondary-color);
             object-fit: cover;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            transition: all 0.3s ease;
-        }
-
-        .user-avatar:hover {
-            border-color: var(--accent-color);
-            transform: scale(1.05);
         }
 
         .avatar-placeholder {
-            width: 32px;
-            height: 32px;
-            background: linear-gradient(135deg, #6c757d, #495057);
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--accent-color);
             display: flex;
             align-items: center;
             justify-content: center;
             color: white;
-            font-size: 14px;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            transition: all 0.3s ease;
+            font-weight: bold;
+            font-size: 0.9rem;
         }
 
-        .avatar-placeholder:hover {
-            border-color: var(--accent-color);
-            transform: scale(1.05);
-        }
-
-        .user-dropdown {
-            min-width: 200px;
-            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.15);
-            border: none;
-            border-radius: 10px;
-            margin-top: 0.5rem;
-        }
-
-        .user-dropdown .dropdown-item {
-            padding: 0.7rem 1.2rem;
-            border-radius: 6px;
-            margin: 0.2rem;
-            transition: all 0.3s ease;
-        }
-
-        .user-dropdown .dropdown-item:hover {
-            background-color: #f8f9fa;
-            transform: translateX(5px);
-        }
-
-        .user-dropdown .dropdown-item i {
-            width: 20px;
-            text-align: center;
-        }
-
-        .user-info {
-            background: linear-gradient(135deg, #f8f9fa, #e9ecef);
-            padding: 1rem;
-            border-radius: 8px;
-            margin-bottom: 0.5rem;
-            text-align: center;
-        }
-
-        .user-info .user-name {
-            font-weight: 600;
-            color: var(--primary-color);
-            margin-bottom: 0.3rem;
-        }
-
-        .user-info .user-email {
-            font-size: 0.85rem;
-            color: #6c757d;
-            margin: 0;
-        }
-
-        /* Styl powiadomień */
         .notification-container {
             position: fixed;
-            top: 20px;
-            right: 20px;
+            top: 70px;
+            left: 50%;
+            transform: translateX(-50%);
             z-index: 1050;
-            max-width: 350px;
+            width: 90%;
+            max-width: 500px;
         }
 
         .alert {
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            border-left: 4px solid;
-            animation: slideInRight 0.5s forwards;
+            border: none;
+            border-radius: 10px;
+            padding: 1rem 1.5rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            animation: slideInDown 0.5s ease;
         }
 
         .alert-success {
-            border-left-color: #198754;
+            background: linear-gradient(135deg, #28a745, #20c997);
+            color: white;
         }
 
-        .alert-danger {
-            border-left-color: #dc3545;
+        .alert-danger,
+        .alert-error {
+            background: linear-gradient(135deg, #dc3545, #e74c3c);
+            color: white;
         }
 
         .alert-warning {
-            border-left-color: #ffc107;
+            background: linear-gradient(135deg, #ffc107, #ff8c00);
+            color: white;
         }
 
         .alert-info {
-            border-left-color: #0dcaf0;
+            background: linear-gradient(135deg, #17a2b8, #007bff);
+            color: white;
         }
 
-        @keyframes slideInRight {
+        @keyframes slideInDown {
             from {
-                transform: translateX(100%);
+                transform: translateX(-50%) translateY(-100%);
                 opacity: 0;
             }
+
             to {
-                transform: translateX(0);
+                transform: translateX(-50%) translateY(0);
                 opacity: 1;
             }
         }
@@ -175,127 +323,121 @@
         @keyframes fadeOut {
             from {
                 opacity: 1;
+                transform: translateX(-50%) translateY(0);
             }
+
             to {
                 opacity: 0;
+                transform: translateX(-50%) translateY(-20px);
             }
         }
 
-        /* Mobile responsive */
-        @media (max-width: 768px) {
-            .user-dropdown {
-                position: static !important;
-                transform: none !important;
-                width: 100%;
-                margin-top: 1rem;
-                box-shadow: none;
-                border: 1px solid #dee2e6;
+        .footer {
+            background-color: var(--primary-color);
+            color: var(--secondary-color);
+            padding: 2rem 0;
+            text-align: center;
+            margin-top: auto;
+        }
+
+        .footer p {
+            margin: 0;
+            font-size: 0.9rem;
+        }
+
+        @media (max-width: 991.98px) {
+            .navbar-nav {
+                text-align: center;
+                padding-top: 1rem;
+            }
+
+            .navbar-nav .nav-link {
+                margin: 5px 0;
+            }
+
+            .notification-container {
+                width: 95%;
+                top: 60px;
             }
         }
+        
     </style>
+    
+    @stack('styles')
 </head>
 
 <body>
-    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+    <nav class="navbar navbar-expand-lg">
         <div class="container">
-            <a class="navbar-brand fw-bold" href="{{ url('/') }}">PureMeal</a>
+            <a class="navbar-brand" href="{{ route('home') }}">puremeal</a>
             <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav"
                 aria-controls="navbarNav" aria-expanded="false" aria-label="Toggle navigation">
                 <span class="navbar-toggler-icon"></span>
             </button>
-
             <div class="collapse navbar-collapse" id="navbarNav">
-                <ul class="navbar-nav ms-auto align-items-lg-center">
+                <ul class="navbar-nav me-auto">
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url('/cennik') }}">Cennik</a>
+                        <a class="nav-link" href="{{ route('home') }}">Home</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url('/dopasowanie') }}">Menu</a>
+                        <a class="nav-link" href="{{ route('dopasowanie') }}">Menu</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link" href="{{ url('/dostawa') }}">Dostawa</a>
+                        <a class="nav-link" href="{{ route('cennik') }}">Cennik</a>
                     </li>
-                    
-                    @if(Auth::check())
-                        <!-- Koszyk -->
-                        <li class="nav-item ms-lg-3 me-lg-2">
-                            <a href="{{ route('cart.index') }}" class="btn btn-outline-warning btn-sm px-3 py-1">
-                                <i class="fas fa-shopping-cart"></i>
-                                @if(session()->has('cart') && count(session('cart')) > 0)
-                                    <span class="badge bg-danger ms-1">{{ count(session('cart')) }}</span>
-                                @endif
+                </ul>
+                <ul class="navbar-nav">
+                    @auth
+                        @if(Auth::user()->role === 'admin')
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <i class="fas fa-cog me-1"></i>Zarządzanie
+                                </a>
+                                <ul class="dropdown-menu">
+                                    <li><a class="dropdown-item" href="{{ route('dashboard') }}">Dashboard</a></li>
+                                    <li><a class="dropdown-item" href="{{ route('menu.index') }}">Zarządzaj Menu</a></li>
+                                    <li><a class="dropdown-item" href="{{ route('orders.index') }}">Zamówienia</a></li>
+                                    <li><a class="dropdown-item" href="{{ route('users.index') }}">Użytkownicy</a></li>
+                                    <li><a class="dropdown-item" href="{{ route('diet-plans.index') }}">Plany Diet</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item" href="{{ route('menu.create') }}">Dodaj Menu</a></li>
+                                    <li><a class="dropdown-item" href="{{ route('diet-plans.create') }}">Dodaj Dietę</a></li>
+                                </ul>
+                            </li>
+                        @endif
+
+                        <li class="nav-item">
+                            <a class="nav-link" href="{{ route('cart.index') }}">
+                                <i class="fas fa-shopping-cart me-1"></i>Koszyk
                             </a>
                         </li>
 
-                        <!-- Dropdown użytkownika z avatarem -->
                         <li class="nav-item dropdown">
-                            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userDropdown" 
-                               role="button" data-bs-toggle="dropdown" aria-expanded="false" style="padding-left: 0.5rem;">
+                            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
                                 @if(Auth::user()->avatar)
-                                    <img src="{{ asset('storage/' . Auth::user()->avatar) }}" 
-                                         alt="Avatar {{ Auth::user()->name }}" 
-                                         class="rounded-circle me-2 user-avatar">
+                                    <img src="{{ asset('storage/' . Auth::user()->avatar) }}" alt="Avatar" class="user-avatar me-2">
                                 @else
-                                    <div class="rounded-circle me-2 avatar-placeholder">
-                                        <i class="fas fa-user"></i>
+                                    <div class="avatar-placeholder me-2">
+                                        {{ strtoupper(substr(Auth::user()->name, 0, 1)) }}
                                     </div>
                                 @endif
-                                <span class="d-none d-lg-inline">{{ Str::limit(Auth::user()->name, 15) }}</span>
-                                <span class="d-lg-none">{{ Str::limit(Auth::user()->name, 10) }}</span>
+                                {{ Auth::user()->name }}
                             </a>
-                            
-                            <ul class="dropdown-menu dropdown-menu-end user-dropdown" aria-labelledby="userDropdown">
-                                <!-- Informacje o użytkowniku -->
-                                <li class="user-info">
-                                    <div class="user-name">{{ Auth::user()->name }}</div>
-                                    <div class="user-email">{{ Auth::user()->email }}</div>
-                                </li>
-                                
+                            <ul class="dropdown-menu dropdown-menu-end">
+                                <li><a class="dropdown-item" href="{{ route('user.dashboard') }}">Mój Panel</a></li>
+                                <li><a class="dropdown-item" href="{{ route('profile.edit') }}">Profil</a></li>
                                 <li><hr class="dropdown-divider"></li>
-                                
-                                <!-- Linki nawigacyjne -->
                                 <li>
-                                    <a class="dropdown-item" href="{{ route('user.dashboard') }}">
-                                        <i class="fas fa-user-circle text-primary"></i>
-                                        Mój profil
-                                    </a>
-                                </li>
-                                
-                                @if(Auth::user()->role === 'admin')
-                                    <li>
-                                        <a class="dropdown-item" href="{{ route('dashboard') }}">
-                                            <i class="fas fa-tachometer-alt text-success"></i>
-                                            Panel administratora
-                                        </a>
-                                    </li>
-                                @endif
-                                
-                                <li>
-                                    <a class="dropdown-item" href="{{ route('cart.index') }}">
-                                        <i class="fas fa-shopping-cart text-warning"></i>
-                                        Mój koszyk
-                                        @if(session()->has('cart') && count(session('cart')) > 0)
-                                            <span class="badge bg-warning text-dark ms-1">{{ count(session('cart')) }}</span>
-                                        @endif
-                                    </a>
-                                </li>
-                                
-                                <li><hr class="dropdown-divider"></li>
-                                
-                                <!-- Wylogowanie -->
-                                <li>
-                                    <form method="POST" action="{{ route('logout') }}" class="d-inline">
+                                    <form method="POST" action="{{ route('logout') }}">
                                         @csrf
-                                        <button type="submit" class="dropdown-item text-danger">
-                                            <i class="fas fa-sign-out-alt text-danger"></i>
-                                            Wyloguj się
+                                        <button type="submit" class="dropdown-item">
+                                            <i class="fas fa-sign-out-alt me-1"></i>Wyloguj
                                         </button>
                                     </form>
                                 </li>
                             </ul>
                         </li>
                     @else
-                        <!-- Przycisk logowania dla niezalogowanych użytkowników -->
                         <li class="nav-item">
                             <a href="{{ route('login') }}" class="btn btn-outline-light btn-sm px-3 py-1">
                                 <i class="fas fa-sign-in-alt me-1"></i>
@@ -308,7 +450,6 @@
         </div>
     </nav>
 
-    <!-- Kontener powiadomień -->
     <div class="notification-container">
         @if(session('success'))
         <div class="alert alert-success alert-dismissible fade show" role="alert">
@@ -351,25 +492,26 @@
         @endif
     </div>
 
-    <main class="container my-5" data-aos="fade-up">
+    <main>
         @yield('content')
     </main>
 
-    <footer>
-        <p class="mb-0">&copy; 2025 PureMeal. Wszystkie prawa zastrzeżone.</p>
+    <footer class="footer">
+        <div class="container">
+            <p>&copy; 2025 PureMeal. Wszystkie prawa zastrzeżone.</p>
+        </div>
     </footer>
 
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
-
+    <script src="https://cdn.jsdelivr.net/npm/aos@2.3.4/dist/aos.js"></script>
     <script>
-        AOS.init({ once: true });
-
-        document.addEventListener("DOMContentLoaded", () => {
+        document.addEventListener("DOMContentLoaded", function () {
             document.body.classList.add("fade-in");
-            
-            // Auto-hide notifications after 5 seconds
+            AOS.init({
+                duration: 1000,
+                once: true
+            });
+
             const alerts = document.querySelectorAll('.alert');
             alerts.forEach(function(alert) {
                 setTimeout(function() {
@@ -381,23 +523,20 @@
             });
         });
 
-        // Poprawiona obsługa linków - wykluczamy elementy dropdown
         document.querySelectorAll('a.nav-link:not(.dropdown-toggle), a.btn').forEach(link => {
             link.addEventListener("click", function (e) {
                 const href = this.getAttribute("href");
 
-                // Sprawdź czy to element dropdown
                 if (this.classList.contains('dropdown-toggle') || 
                     this.classList.contains('dropdown-item') ||
                     this.closest('.dropdown') ||
                     this.getAttribute('data-bs-toggle') === 'dropdown' ||
                     this.getAttribute('role') === 'button') {
-                    return; // Nie blokuj dropdown
+                    return; 
                 }
 
-                // Sprawdź czy to formularz (np. wylogowanie)
                 if (this.tagName.toLowerCase() === 'button' && this.closest('form')) {
-                    return; // Nie blokuj formularzy
+                    return; 
                 }
 
                 if (!href || href.startsWith('#') || href.startsWith('javascript:')) return;
@@ -412,7 +551,6 @@
             });
         });
 
-        // Osobna obsługa dla dropdown items
         document.querySelectorAll('.dropdown-item').forEach(item => {
             if (item.tagName.toLowerCase() === 'a') {
                 item.addEventListener("click", function (e) {

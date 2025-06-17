@@ -159,6 +159,74 @@
     <script>
         AOS.init();
     </script>
+    <script>
+document.addEventListener('DOMContentLoaded', function() {
+    const form = document.querySelector('form');
+    
+    form.addEventListener('submit', function(e) {
+        let isValid = true;
+        
+        // Walidacja nazwy użytkownika
+        const name = document.getElementById('name');
+        if (name.value.trim().length < 2) {
+            showError(name, 'Imię musi mieć co najmniej 2 znaki');
+            isValid = false;
+        } else {
+            clearError(name);
+        }
+        
+        // Walidacja email
+        const email = document.getElementById('email');
+        const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+        if (!emailRegex.test(email.value)) {
+            showError(email, 'Wprowadź poprawny adres email');
+            isValid = false;
+        } else {
+            clearError(email);
+        }
+        
+        // Walidacja hasła
+        const password = document.getElementById('password');
+        const passwordConfirm = document.getElementById('password_confirmation');
+        
+        if (password.value.length < 8) {
+            showError(password, 'Hasło musi mieć co najmniej 8 znaków');
+            isValid = false;
+        } else {
+            clearError(password);
+        }
+        
+        if (password.value !== passwordConfirm.value) {
+            showError(passwordConfirm, 'Hasła nie są identyczne');
+            isValid = false;
+        } else {
+            clearError(passwordConfirm);
+        }
+        
+        if (!isValid) {
+            e.preventDefault();
+        }
+    });
+    
+    function showError(field, message) {
+        field.classList.add('is-invalid');
+        let errorDiv = field.parentNode.querySelector('.invalid-feedback');
+        if (!errorDiv) {
+            errorDiv = document.createElement('div');
+            errorDiv.className = 'invalid-feedback';
+            field.parentNode.appendChild(errorDiv);
+        }
+        errorDiv.textContent = message;
+    }
+    
+    function clearError(field) {
+        field.classList.remove('is-invalid');
+        const errorDiv = field.parentNode.querySelector('.invalid-feedback');
+        if (errorDiv) {
+            errorDiv.remove();
+        }
+    }
+});
+</script>
 </body>
-
 </html>

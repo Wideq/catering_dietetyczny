@@ -15,7 +15,7 @@ class Order extends Model
         'quantity', 
         'status', 
         'order_date',
-        'transaction_id'.
+        'transaction_id',  
         'total_amount' 
     ];
 
@@ -33,11 +33,18 @@ class Order extends Model
     {
         return $this->belongsTo(Transaction::class);
     }
+
     public function items()
-{
-    return $this->hasMany(OrderItem::class);
-}
-public function dietPlan()
+    {
+        return $this->hasMany(OrderItem::class);
+    }
+
+    public function orderItems()
+    {
+        return $this->hasMany(OrderItem::class);
+    }
+
+    public function dietPlan()
     {
         return $this->belongsTo(DietPlan::class);
     }

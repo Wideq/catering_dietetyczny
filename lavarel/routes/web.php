@@ -3,7 +3,6 @@
 use App\Models\User;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Http\Request;
-use App\Http\Controllers\ProfileController;
 use App\Http\Controllers\Auth\AuthenticatedSessionController;
 use App\Http\Controllers\Controlls\MenuController;
 use App\Http\Controllers\Controlls\TransactionController;
@@ -15,18 +14,18 @@ use App\Http\Controllers\Controlls\CartController;
 use App\Http\Controllers\Controlls\DietPlanController;
 use App\Http\Controllers\Controlls\HomeController;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Str;
 
 // ==================== Strona główna i statyczne strony ====================
 
 // Strona główna
-Route::get('/', function () {
-    return view('index');
-})->name('home');
+Route::get('/', [HomeController::class, 'index'])->name('home');
 
 // Cennik
 Route::get('/cennik', function () {
     return view('cennik');
-})->name('pricing');
+})->name('cennik');
 
 // Dopasowanie diety
 Route::get('/dopasowanie', [MenuController::class, 'index'])->name('dopasowanie');
@@ -36,19 +35,15 @@ Route::get('/dostawa', function () {
     return view('dostawa'); 
 })->name('delivery');
 
-// ==================== Dashboard ====================
+// ==================== Rejestracja użytkownika ====================
 
-Route::get('/dashboard', [DashboardController::class, 'index'])
-    ->middleware(['auth', 'verified'])
-    ->name('dashboard');
+Route::get('/register', [UserController::class, 'create'])
+    ->middleware('guest')
+    ->name('register');
 
-// ==================== Profile użytkownika ====================
-
-Route::middleware('auth')->group(function () {
-    Route::get('/user/edit', [ProfileController::class, 'edit'])->name('profile.edit');
-    Route::patch('/user/edit', [ProfileController::class, 'update'])->name('profile.update');
-    Route::delete('/user/edit', [ProfileController::class, 'destroy'])->name('profile.destroy');
-});
+Route::post('/register', [UserController::class, 'store'])
+    ->middleware('guest')
+    ->name('register.store');
 
 // ==================== Logowanie i wylogowanie ====================
 
@@ -65,24 +60,35 @@ Route::post('/logout', [AuthenticatedSessionController::class, 'destroy'])
     ->middleware('auth')
     ->name('logout');
 
-// ==================== Rejestracja użytkownika ====================
+// ==================== Dashboard ====================
 
-Route::get('/register', [UserController::class, 'create'])
-    ->middleware('guest')
-    ->name('register');
+Route::get('/dashboard', [DashboardController::class, 'index'])
+    ->middleware(['auth', 'verified'])
+    ->name('dashboard');
 
-Route::post('/register', [UserController::class, 'store'])
-    ->middleware('guest')
-    ->name('register.store');
+// ==================== Profile użytkownika ====================
+
+Route::middleware('auth')->group(function () {
+    // Edycja profilu użytkownika
+    Route::get('/profile/edit', function () {
+        return view('users.edit-profile');
+    })->name('profile.edit');
+    
+    Route::put('/profile/update', [UserController::class, 'updateProfile'])->name('profile.update');
+});
+
+// ==================== User Dashboard ====================
+
+Route::middleware('auth')->group(function () {
+    Route::get('/user/dashboard', [UserDashboardController::class, 'index'])->name('user.dashboard');
+});
 
 // ==================== Zarządzanie użytkownikami ====================
-Route::get('/users/create', [UserController::class, 'createByAdmin'])->name('users.create-admin');
-Route::post('/users/store', [UserController::class, 'storeByAdmin'])->name('users.store-admin');
-    
+
 Route::middleware(['auth'])->group(function () {
     // Lista użytkowników
     Route::get('/users', function () {
-        $users = User::all(); 
+        $users = User::orderBy('created_at', 'desc')->paginate(10); 
         return view('users.index', compact('users')); 
     })->name('users.index');
 
@@ -94,39 +100,39 @@ Route::middleware(['auth'])->group(function () {
 
     // Aktualizacja użytkownika
     Route::put('/users/update/{id}', function (Request $request, $id) {
-    $user = User::findOrFail($id);
-    
-    // Walidacja
-    $validated = $request->validate([
-        'name' => 'required|string|max:255',
-        'email' => 'required|email|unique:users,email,' . $id,
-        'role' => 'required|string|in:user,admin',
-        'password' => 'nullable|string|min:8|confirmed',
-    ]);
-    
-    // Podstawowe dane
-    $updateData = [
-        'name' => $validated['name'],
-        'email' => $validated['email'],
-        'role' => $validated['role'],
-    ];
-    
-    // Dodaj hasło tylko jeśli zostało podane
-    if (!empty($validated['password'])) {
-        $updateData['password'] = Hash::make($validated['password']);
-    }
-    
-    $user->update($updateData);
-    
-    return redirect()->route('users.index')->with('success', 'Dane użytkownika zostały zaktualizowane.');
-})->name('users.update');
+        $user = User::findOrFail($id);
+        
+        // Walidacja
+        $validated = $request->validate([
+            'name' => 'required|string|max:255',
+            'email' => 'required|email|unique:users,email,' . $id,
+            'role' => 'required|string|in:user,admin',
+            'password' => 'nullable|string|min:8|confirmed',
+        ]);
+        
+        // Podstawowe dane
+        $updateData = [
+            'name' => $validated['name'],
+            'email' => $validated['email'],
+            'role' => $validated['role'],
+        ];
+        
+        // Dodaj hasło tylko jeśli zostało podane
+        if (!empty($validated['password'])) {
+            $updateData['password'] = Hash::make($validated['password']);
+        }
+        
+        $user->update($updateData);
+        
+        return redirect()->route('users.index')->with('success', 'Dane użytkownika zostały zaktualizowane.');
+    })->name('users.update');
 
-    // Usuwanie użytkownika
-    Route::delete('/users/{id}', function ($id) {
-        $user = User::findOrFail($id); 
-        $user->delete(); 
-        return redirect()->route('users.index')->with('success', 'Użytkownik został usunięty.');
-    })->name('users.destroy');
+    // Usuwanie użytkownika przez kontroler
+    Route::delete('/users/{id}', [UserController::class, 'destroy'])->name('users.destroy');
+    
+    // Tworzenie użytkownika przez admina
+    Route::get('/users/create', [UserController::class, 'createByAdmin'])->name('users.create-admin');
+    Route::post('/users/store', [UserController::class, 'storeByAdmin'])->name('users.store-admin');
 });
 
 // ==================== Zarządzanie menu ====================
@@ -163,32 +169,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/orders/{id}', [OrderController::class, 'destroy'])->name('orders.destroy');
 });
 
-
-
-Route::middleware(['auth'])->group(function () {
-    Route::get('/user/userdashboard', [UserDashboardController::class, 'index'])->name('user.dashboard');
-    Route::put('/user/profile', [UserDashboardController::class, 'updateProfile'])->name('user.profile.update');
-});
-
-Route::middleware('auth')->group(function () {
-    Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
-    Route::post('/cart/add/{menuItem}', [CartController::class, 'add'])->name('cart.add');
-    Route::delete('/cart/remove/{cartItem}', [CartController::class, 'remove'])->name('cart.remove');
-    Route::post('/cart/checkout', [CartController::class, 'checkout'])->name('cart.checkout');
-});
-
-// Dodaj te trasy w pliku routes/web.php
-Route::middleware(['auth'])->group(function () {
-    
-    Route::resource('diet-plans', DietPlanController::class);
-    Route::get('diet-plans/{dietPlan}/manage-menu', [DietPlanController::class, 'manageMenu'])->name('diet-plans.manage-menu');
-    Route::put('diet-plans/{dietPlan}/update-menu', [DietPlanController::class, 'updateMenu'])->name('diet-plans.update-menu');
-});
-
-Route::get('diet-plans/{dietPlan}', [DietPlanController::class, 'show'])->name('diet-plans.show');
-
-// Zaktualizuj trasę strony głównej (zastąp obecną implementację, około linii 23)
-Route::get('/', [HomeController::class, 'index'])->name('home');
+// ==================== Koszyk ====================
 
 Route::middleware('auth')->group(function () {
     Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
@@ -198,11 +179,16 @@ Route::middleware('auth')->group(function () {
     Route::post('/cart/checkout', [CartController::class, 'checkout'])->name('cart.checkout');
 });
 
+// ==================== Plany dietetyczne ====================
+
 Route::middleware(['auth'])->group(function () {
-    Route::get('/users/create', [UserController::class, 'createByAdmin'])->name('users.create-admin');
-    Route::post('/users/store', [UserController::class, 'storeByAdmin'])->name('users.store-admin');
+    Route::resource('diet-plans', DietPlanController::class);
+    Route::get('diet-plans/{dietPlan}/manage-menu', [DietPlanController::class, 'manageMenu'])->name('diet-plans.manage-menu');
+    Route::put('diet-plans/{dietPlan}/update-menu', [DietPlanController::class, 'updateMenu'])->name('diet-plans.update-menu');
 });
-Route::middleware('auth')->group(function () {
-    Route::get('/user/dashboard', [UserDashboardController::class, 'index'])->name('user.dashboard');
-    Route::put('/user/profile/update', [UserDashboardController::class, 'updateProfile'])->name('user.profile.update');
-});
+
+Route::get('diet-plans/{dietPlan}', [DietPlanController::class, 'show'])->name('diet-plans.show');
+
+// ==================== Włączenie tras autentykacji ====================
+
+require __DIR__.'/auth.php';

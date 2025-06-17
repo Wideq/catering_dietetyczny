@@ -7,6 +7,8 @@ use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+// USUŃ: use App\Models\CartItem;
+
 class User extends Authenticatable
 {
     /** @use HasFactory<\Database\Factories\UserFactory> */
@@ -47,15 +49,15 @@ class User extends Authenticatable
             'password' => 'hashed',
         ];
     }
-    public function orders() {
+    
+    public function orders()
+    {
         return $this->hasMany(Order::class);
     }
-    public function transactions() {
-        return $this->hasMany(Transaction::class);
-    } 
-    public function isAdmin(): bool
+    
+    public function transactions()
     {
-        return $this->role === 'admin';
+        return $this->hasMany(Transaction::class);
     }
-
+    
 }
