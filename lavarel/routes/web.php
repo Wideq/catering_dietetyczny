@@ -17,7 +17,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 
-// ==================== STRONA GŁÓWNA I STATYCZNE STRONY ====================
+// ==================== Strona główna i statyczne strony ====================
 
 // Strona główna
 Route::get('/', [HomeController::class, 'index'])->name('home');
@@ -35,21 +35,20 @@ Route::get('/dostawa', function () {
     return view('dostawa'); 
 })->name('delivery');
 
-// ==================== REJESTRACJA UŻYTKOWNIKA ====================
+// ==================== Rejestracja użytkownika ====================
 
 Route::middleware('guest')->group(function () {
-    // Rejestracja przez UserController (bez konfliktu z auth.php)
     Route::get('/register', [UserController::class, 'create'])->name('register');
     Route::post('/register', [UserController::class, 'store'])->name('register');
 });
 
-// ==================== DASHBOARD ====================
+// ==================== Dashboard ====================
 
 Route::get('/dashboard', [DashboardController::class, 'index'])
     ->middleware(['auth', 'verified'])
     ->name('dashboard');
 
-// ==================== PROFILE UŻYTKOWNIKA ====================
+// ==================== Profile użytkownika ====================
 
 Route::middleware('auth')->group(function () {
     // Edycja profilu użytkownika
@@ -60,14 +59,13 @@ Route::middleware('auth')->group(function () {
     Route::put('/profile/update', [UserController::class, 'updateProfile'])->name('profile.update');
 });
 
-// ==================== USER DASHBOARD ====================
+// ==================== User Dashboard ====================
 
 Route::middleware('auth')->group(function () {
     Route::get('/user/dashboard', [UserDashboardController::class, 'index'])->name('user.dashboard');
-    Route::put('/user/profile/update', [UserDashboardController::class, 'updateProfile'])->name('user.profile.update');
 });
 
-// ==================== ZARZĄDZANIE UŻYTKOWNIKAMI ====================
+// ==================== Zarządzanie użytkownikami ====================
 
 Route::middleware(['auth'])->group(function () {
     // Lista użytkowników
@@ -119,12 +117,12 @@ Route::middleware(['auth'])->group(function () {
     Route::post('/users/store', [UserController::class, 'storeByAdmin'])->name('users.store-admin');
 });
 
-// ==================== ZARZĄDZANIE MENU ====================
+// ==================== Zarządzanie menu ====================
 
-// Public menu route (bez logowania)
+// Public menu route
 Route::get('/menu', [MenuController::class, 'index'])->name('menu.index');
 
-// Admin menu management routes (z logowaniem)
+// Admin menu management routes
 Route::middleware(['auth'])->group(function () {
     Route::get('add-menu', [MenuController::class, 'create'])->name('menu.create');
     Route::post('add-menu', [MenuController::class, 'store'])->name('menu.store');
@@ -133,7 +131,7 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/menu/{id}', [MenuController::class, 'destroy'])->name('menu.destroy');
 });
 
-// ==================== ZARZĄDZANIE TRANSAKCJAMI ====================
+// ==================== Zarządzanie transakcjami ====================
 
 Route::middleware(['auth'])->group(function () {
     Route::get('/transactions', [TransactionController::class, 'index'])->name('transactions.index');
@@ -142,7 +140,7 @@ Route::middleware(['auth'])->group(function () {
     Route::delete('/transactions/{id}', [TransactionController::class, 'destroy'])->name('transactions.destroy');
 });
 
-// ==================== ZARZĄDZANIE ZAMÓWIENIAMI ====================
+// ==================== Zarządzanie zamówieniami ====================
 
 Route::middleware('auth')->group(function () {
     Route::get('/orders', [OrderController::class, 'index'])->name('orders.index');
@@ -153,7 +151,7 @@ Route::middleware('auth')->group(function () {
     Route::delete('/orders/{id}', [OrderController::class, 'destroy'])->name('orders.destroy');
 });
 
-// ==================== KOSZYK ====================
+// ==================== Koszyk ====================
 
 Route::middleware('auth')->group(function () {
     Route::get('/cart', [CartController::class, 'index'])->name('cart.index');
@@ -163,18 +161,16 @@ Route::middleware('auth')->group(function () {
     Route::post('/cart/checkout', [CartController::class, 'checkout'])->name('cart.checkout');
 });
 
-// ==================== PLANY DIETETYCZNE ====================
+// ==================== Plany dietetyczne ====================
 
-// Public route dla pokazywania diety (bez logowania)
-Route::get('diet-plans/{dietPlan}', [DietPlanController::class, 'show'])->name('diet-plans.show');
-
-// Admin routes dla zarządzania dietami (z logowaniem)
 Route::middleware(['auth'])->group(function () {
-    Route::resource('diet-plans', DietPlanController::class)->except('show');
+    Route::resource('diet-plans', DietPlanController::class);
     Route::get('diet-plans/{dietPlan}/manage-menu', [DietPlanController::class, 'manageMenu'])->name('diet-plans.manage-menu');
     Route::put('diet-plans/{dietPlan}/update-menu', [DietPlanController::class, 'updateMenu'])->name('diet-plans.update-menu');
 });
 
-// ==================== WŁĄCZENIE TRAS AUTENTYKACJI ====================
+Route::get('diet-plans/{dietPlan}', [DietPlanController::class, 'show'])->name('diet-plans.show');
+
+// ==================== Włączenie tras autentykacji (WYŁĄCZNIE LOGIN/LOGOUT) ====================
 
 require __DIR__.'/auth.php';

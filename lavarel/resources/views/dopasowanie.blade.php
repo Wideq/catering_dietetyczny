@@ -418,6 +418,52 @@
         text-align: center;
     }
 
+    /* Style dla nieaktywnych dań */
+    .menu-inactive {
+        opacity: 0.7;
+    }
+
+    .menu-inactive .card {
+        border: 2px solid #dc3545 !important;
+        background-color: #f8f9fa;
+    }
+
+    .menu-inactive .card:hover {
+        transform: none !important;
+        box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3) !important;
+    }
+
+    .menu-inactive .btn-add-to-cart {
+        display: none !important;
+    }
+
+    .opacity-50 {
+        opacity: 0.5;
+    }
+
+    .btn-add-to-cart {
+        background: linear-gradient(135deg, #007bff, #0056b3);
+        color: white;
+        border: none;
+        padding: 10px;
+        border-radius: 8px;
+        font-weight: 600;
+        transition: all 0.3s ease;
+    }
+
+    .btn-add-to-cart:hover {
+        background: linear-gradient(135deg, #0056b3, #004085);
+        transform: translateY(-2px);
+        box-shadow: 0 4px 8px rgba(0,123,255,0.3);
+        color: white;
+    }
+
+    .admin-buttons {
+        margin-top: 10px;
+        padding-top: 10px;
+        border-top: 1px solid #e9ecef;
+    }
+
     /* Responsive */
     @media (max-width: 768px) {
         .filters-container {
@@ -539,24 +585,42 @@
     
     <div class="row g-4" id="menu-container">
         @foreach ($menus as $menu)
-        <div class="col-md-4 menu-item" data-category="{{ strtolower($menu->category ?? '') }}" data-price="{{ $menu->price }}">
-            <div class="card shadow-sm h-100">
+        <div class="col-md-4 menu-item {{ !$menu->is_active ? 'menu-inactive' : '' }}" 
+             data-category="{{ strtolower($menu->category ?? '') }}" 
+             data-price="{{ $menu->price }}">
+            <div class="card shadow-sm h-100 {{ !$menu->is_active ? 'border-danger' : '' }}">
+                
+                @if(!$menu->is_active)
+                    <div class="alert alert-warning mb-0 text-center" style="border-radius: 0;">
+                        <i class="fas fa-exclamation-triangle"></i> Danie nieaktywne
+                    </div>
+                @endif
+                
                 @if ($menu->image)
-                    <img src="{{ asset('storage/' . $menu->image) }}" class="card-img-top" alt="{{ $menu->name }}" style="height: 200px; object-fit: cover;">
+                    <img src="{{ asset('storage/' . $menu->image) }}" 
+                         class="card-img-top {{ !$menu->is_active ? 'opacity-50' : '' }}" 
+                         alt="{{ $menu->name }}" 
+                         style="height: 200px; object-fit: cover;">
                 @else
-                    <div class="card-img-top bg-light d-flex align-items-center justify-content-center" style="height: 200px;">
+                    <div class="card-img-top bg-light d-flex align-items-center justify-content-center {{ !$menu->is_active ? 'opacity-50' : '' }}" 
+                         style="height: 200px;">
                         <i class="fas fa-utensils fa-3x text-muted"></i>
                     </div>
                 @endif
                 
                 <div class="card-body d-flex flex-column">
-                    <h5 class="card-title">{{ $menu->name }}</h5>
+                    <h5 class="card-title {{ !$menu->is_active ? 'text-muted' : '' }}">
+                        {{ $menu->name }}
+                        @if(!$menu->is_active)
+                            <span class="badge bg-danger ms-2">Nieaktywne</span>
+                        @endif
+                    </h5>
                     <p class="card-text text-muted small mb-2">
                         <i class="fas fa-tag me-1"></i>{{ ucfirst($menu->category ?? 'Brak kategorii') }}
                     </p>
                     <p class="card-text flex-grow-1">{{ Str::limit($menu->description, 100) }}</p>
                     
-                    <!-- DODANO: Wartości odżywcze -->
+                    <!-- Wartości odżywcze -->
                     @if($menu->calories || $menu->protein || $menu->carbs || $menu->fat)
                         <div class="nutrition-info mb-3">
                             <div class="row g-1">
@@ -598,12 +662,18 @@
                         </div>
                         
                         @auth
-                            <form action="{{ route('cart.add', $menu->id) }}" method="POST">
-                                @csrf
-                                <button type="submit" class="btn btn-add-to-cart w-100">
-                                    <i class="fas fa-shopping-cart me-2"></i>Dodaj do koszyka
-                                </button>
-                            </form>
+                            @if($menu->is_active)
+                                <form action="{{ route('cart.add', $menu->id) }}" method="POST">
+                                    @csrf
+                                    <button type="submit" class="btn btn-add-to-cart w-100">
+                                        <i class="fas fa-shopping-cart me-2"></i>Dodaj do koszyka
+                                    </button>
+                                </form>
+                            @else
+                                <div class="alert alert-danger text-center py-2 mb-0">
+                                    <small><i class="fas fa-ban me-1"></i>Danie niedostępne</small>
+                                </div>
+                            @endif
                         @endauth
 
                         @if(Auth::check() && Auth::user()->role === 'admin')

@@ -19,14 +19,27 @@ class Menu extends Model
         'protein',
         'carbs',
         'fat',
-        'fiber'
+        'fiber',
+        'is_active'
     ];
 
-    public function orders()
+    protected $casts = [
+        'price' => 'decimal:2',
+        'calories' => 'integer',
+        'protein' => 'decimal:2',
+        'carbs' => 'decimal:2',
+        'fat' => 'decimal:2',
+        'fiber' => 'decimal:2',
+        'is_active' => 'boolean',
+    ];
+
+    // Scope dla aktywnych dań
+    public function scopeActive($query)
     {
-        return $this->hasMany(Order::class);
+        return $query->where('is_active', true);
     }
 
+    // Relacje
     public function orderItems()
     {
         return $this->hasMany(OrderItem::class);
@@ -35,24 +48,5 @@ class Menu extends Model
     public function dietPlans()
     {
         return $this->belongsToMany(DietPlan::class, 'menu_diet_plan');
-    }
-
-    public function getCaloriesPerGramAttribute()
-    {
-        return $this->calories ? round($this->calories / 100, 2) : 0;
-    }
-
-    public function getMacroBalanceAttribute()
-    {
-        if (!$this->protein || !$this->carbs || !$this->fat) {
-            return null;
-        }
-
-        $total = $this->protein + $this->carbs + $this->fat;
-        return [
-            'protein_percent' => round(($this->protein / $total) * 100, 1),
-            'carbs_percent' => round(($this->carbs / $total) * 100, 1),
-            'fat_percent' => round(($this->fat / $total) * 100, 1),
-        ];
     }
 }
