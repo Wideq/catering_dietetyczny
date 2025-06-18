@@ -172,5 +172,8 @@ Route::middleware(['auth'])->group(function () {
 Route::get('diet-plans/{dietPlan}', [DietPlanController::class, 'show'])->name('diet-plans.show');
 
 // ==================== Włączenie tras autentykacji (WYŁĄCZNIE LOGIN/LOGOUT) ====================
-
+Route::middleware('auth')->group(function () {
+    Route::get('/user/dashboard', [UserDashboardController::class, 'index'])->name('user.dashboard');
+    Route::put('/user/profile/update', [UserDashboardController::class, 'updateProfile'])->name('user.profile.update');
+});
 require __DIR__.'/auth.php';
